@@ -1,0 +1,502 @@
+/*!
+ * Hover.css (http://ianlunn.github.io/Hover/)
+ * Version: 2.0.2
+ * Author: Ian Lunn @IanLunn
+ * Author URL: http://ianlunn.co.uk/
+ * Github: https://github.com/IanLunn/Hover
+
+ * Made available under a MIT License:
+ * http://www.opensource.org/licenses/mit-license.php
+
+ * Hover.css Copyright Ian Lunn 2014. Generated with Sass.
+ */
+/* 2D TRANSITIONS */
+/* Grow */
+.yjzan-animation-grow {
+  transition-duration: 0.3s;
+  transition-property: transform;
+}
+.yjzan-animation-grow:hover {
+  transform: scale(1.1);
+}
+
+/* Shrink */
+.yjzan-animation-shrink {
+  transition-duration: 0.3s;
+  transition-property: transform;
+}
+.yjzan-animation-shrink:hover {
+  transform: scale(0.9);
+}
+
+/* Pulse */
+@keyframes yjzan-animation-pulse {
+  25% {
+    transform: scale(1.1);
+  }
+  75% {
+    transform: scale(0.9);
+  }
+}
+.yjzan-animation-pulse:hover {
+  animation-name: yjzan-animation-pulse;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Pulse Grow */
+@keyframes yjzan-animation-pulse-grow {
+  to {
+    transform: scale(1.1);
+  }
+}
+.yjzan-animation-pulse-grow:hover {
+  animation-name: yjzan-animation-pulse-grow;
+  animation-duration: 0.3s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* Pulse Shrink */
+@keyframes yjzan-animation-pulse-shrink {
+  to {
+    transform: scale(0.9);
+  }
+}
+.yjzan-animation-pulse-shrink:hover {
+  animation-name: yjzan-animation-pulse-shrink;
+  animation-duration: 0.3s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* Push */
+@keyframes yjzan-animation-push {
+  50% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.yjzan-animation-push:hover {
+  animation-name: yjzan-animation-push;
+  animation-duration: 0.3s;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+}
+
+/* Pop */
+@keyframes yjzan-animation-pop {
+  50% {
+    transform: scale(1.2);
+  }
+}
+.yjzan-animation-pop:hover {
+  animation-name: yjzan-animation-pop;
+  animation-duration: 0.3s;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+}
+
+/* Bounce In */
+.yjzan-animation-bounce-in {
+  transition-duration: 0.5s;
+}
+.yjzan-animation-bounce-in:hover {
+  transform: scale(1.2);
+  transition-timing-function: cubic-bezier(0.47, 2.02, 0.31, -0.36);
+}
+
+/* Bounce Out */
+.yjzan-animation-bounce-out {
+  transition-duration: 0.5s;
+}
+.yjzan-animation-bounce-out:hover {
+  transform: scale(0.8);
+  transition-timing-function: cubic-bezier(0.47, 2.02, 0.31, -0.36);
+}
+
+/* Rotate */
+.yjzan-animation-rotate {
+  transition-duration: 0.3s;
+  transition-property: transform;
+}
+.yjzan-animation-rotate:hover {
+  transform: rotate(4deg);
+}
+
+/* Grow Rotate */
+.yjzan-animation-grow-rotate {
+  transition-duration: 0.3s;
+  transition-property: transform;
+}
+.yjzan-animation-grow-rotate:hover {
+  transform: scale(1.1) rotate(4deg);
+}
+
+/* Float */
+.yjzan-animation-float {
+  transition-duration: 0.3s;
+  transition-property: transform;
+  transition-timing-function: ease-out;
+}
+.yjzan-animation-float:hover {
+  transform: translateY(-8px);
+}
+
+/* Sink */
+.yjzan-animation-sink {
+  transition-duration: 0.3s;
+  transition-property: transform;
+  transition-timing-function: ease-out;
+}
+.yjzan-animation-sink:hover {
+  transform: translateY(8px);
+}
+
+/* Bob */
+@keyframes yjzan-animation-bob {
+  0% {
+    transform: translateY(-8px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes yjzan-animation-bob-float {
+  100% {
+    transform: translateY(-8px);
+  }
+}
+.yjzan-animation-bob:hover {
+  animation-name: yjzan-animation-bob-float, yjzan-animation-bob;
+  animation-duration: .3s, 1.5s;
+  animation-delay: 0s, .3s;
+  animation-timing-function: ease-out, ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards;
+  animation-direction: normal, alternate;
+}
+
+/* Hang */
+@keyframes yjzan-animation-hang {
+  0% {
+    transform: translateY(8px);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+  100% {
+    transform: translateY(8px);
+  }
+}
+@keyframes yjzan-animation-hang-sink {
+  100% {
+    transform: translateY(8px);
+  }
+}
+.yjzan-animation-hang:hover {
+  animation-name: yjzan-animation-hang-sink, yjzan-animation-hang;
+  animation-duration: .3s, 1.5s;
+  animation-delay: 0s, .3s;
+  animation-timing-function: ease-out, ease-in-out;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards;
+  animation-direction: normal, alternate;
+}
+
+/* Skew */
+.yjzan-animation-skew {
+  transition-duration: 0.3s;
+  transition-property: transform;
+}
+.yjzan-animation-skew:hover {
+  transform: skew(-10deg);
+}
+
+/* Skew Forward */
+.yjzan-animation-skew-forward {
+  transition-duration: 0.3s;
+  transition-property: transform;
+  transform-origin: 0 100%;
+}
+.yjzan-animation-skew-forward:hover {
+  transform: skew(-10deg);
+}
+
+/* Skew Backward */
+.yjzan-animation-skew-backward {
+  transition-duration: 0.3s;
+  transition-property: transform;
+  transform-origin: 0 100%;
+}
+.yjzan-animation-skew-backward:hover {
+  transform: skew(10deg);
+}
+
+/* Wobble Vertical */
+@keyframes yjzan-animation-wobble-vertical {
+  16.65% {
+    transform: translateY(8px);
+  }
+  33.3% {
+    transform: translateY(-6px);
+  }
+  49.95% {
+    transform: translateY(4px);
+  }
+  66.6% {
+    transform: translateY(-2px);
+  }
+  83.25% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+.yjzan-animation-wobble-vertical:hover {
+  animation-name: yjzan-animation-wobble-vertical;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Wobble Horizontal */
+@keyframes yjzan-animation-wobble-horizontal {
+  16.65% {
+    transform: translateX(8px);
+  }
+  33.3% {
+    transform: translateX(-6px);
+  }
+  49.95% {
+    transform: translateX(4px);
+  }
+  66.6% {
+    transform: translateX(-2px);
+  }
+  83.25% {
+    transform: translateX(1px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+.yjzan-animation-wobble-horizontal:hover {
+  animation-name: yjzan-animation-wobble-horizontal;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Wobble To Bottom Right */
+@keyframes yjzan-animation-wobble-to-bottom-right {
+  16.65% {
+    transform: translate(8px, 8px);
+  }
+  33.3% {
+    transform: translate(-6px, -6px);
+  }
+  49.95% {
+    transform: translate(4px, 4px);
+  }
+  66.6% {
+    transform: translate(-2px, -2px);
+  }
+  83.25% {
+    transform: translate(1px, 1px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.yjzan-animation-wobble-to-bottom-right:hover {
+  animation-name: yjzan-animation-wobble-to-bottom-right;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Wobble To Top Right */
+@keyframes yjzan-animation-wobble-to-top-right {
+  16.65% {
+    transform: translate(8px, -8px);
+  }
+  33.3% {
+    transform: translate(-6px, 6px);
+  }
+  49.95% {
+    transform: translate(4px, -4px);
+  }
+  66.6% {
+    transform: translate(-2px, 2px);
+  }
+  83.25% {
+    transform: translate(1px, -1px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+.yjzan-animation-wobble-to-top-right:hover {
+  animation-name: yjzan-animation-wobble-to-top-right;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Wobble Top */
+@keyframes yjzan-animation-wobble-top {
+  16.65% {
+    transform: skew(-12deg);
+  }
+  33.3% {
+    transform: skew(10deg);
+  }
+  49.95% {
+    transform: skew(-6deg);
+  }
+  66.6% {
+    transform: skew(4deg);
+  }
+  83.25% {
+    transform: skew(-2deg);
+  }
+  100% {
+    transform: skew(0);
+  }
+}
+.yjzan-animation-wobble-top {
+  transform-origin: 0 100%;
+}
+.yjzan-animation-wobble-top:hover {
+  animation-name: yjzan-animation-wobble-top;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Wobble Bottom */
+@keyframes yjzan-animation-wobble-bottom {
+  16.65% {
+    transform: skew(-12deg);
+  }
+  33.3% {
+    transform: skew(10deg);
+  }
+  49.95% {
+    transform: skew(-6deg);
+  }
+  66.6% {
+    transform: skew(4deg);
+  }
+  83.25% {
+    transform: skew(-2deg);
+  }
+  100% {
+    transform: skew(0);
+  }
+}
+.yjzan-animation-wobble-bottom {
+  transform-origin: 100% 0;
+}
+.yjzan-animation-wobble-bottom:hover {
+  animation-name: yjzan-animation-wobble-bottom;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Wobble Skew */
+@keyframes yjzan-animation-wobble-skew {
+  16.65% {
+    transform: skew(-12deg);
+  }
+  33.3% {
+    transform: skew(10deg);
+  }
+  49.95% {
+    transform: skew(-6deg);
+  }
+  66.6% {
+    transform: skew(4deg);
+  }
+  83.25% {
+    transform: skew(-2deg);
+  }
+  100% {
+    transform: skew(0);
+  }
+}
+.yjzan-animation-wobble-skew:hover {
+  animation-name: yjzan-animation-wobble-skew;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+/* Buzz */
+@keyframes yjzan-animation-buzz {
+  50% {
+    transform: translateX(3px) rotate(2deg);
+  }
+  100% {
+    transform: translateX(-3px) rotate(-2deg);
+  }
+}
+.yjzan-animation-buzz:hover {
+  animation-name: yjzan-animation-buzz;
+  animation-duration: 0.15s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Buzz Out */
+@keyframes yjzan-animation-buzz-out {
+  10% {
+    transform: translateX(3px) rotate(2deg);
+  }
+  20% {
+    transform: translateX(-3px) rotate(-2deg);
+  }
+  30% {
+    transform: translateX(3px) rotate(2deg);
+  }
+  40% {
+    transform: translateX(-3px) rotate(-2deg);
+  }
+  50% {
+    transform: translateX(2px) rotate(1deg);
+  }
+  60% {
+    transform: translateX(-2px) rotate(-1deg);
+  }
+  70% {
+    transform: translateX(2px) rotate(1deg);
+  }
+  80% {
+    transform: translateX(-2px) rotate(-1deg);
+  }
+  90% {
+    transform: translateX(1px) rotate(0);
+  }
+  100% {
+    transform: translateX(-1px) rotate(0);
+  }
+}
+.yjzan-animation-buzz-out:hover {
+  animation-name: yjzan-animation-buzz-out;
+  animation-duration: 0.75s;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+}
+
+/*# sourceMappingURL=hover.css.map */
