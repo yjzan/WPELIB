@@ -2382,8 +2382,7 @@ body.rtl.woocommerce-page div.product .yjzan-widget-woocommerce-product-images d
 .woocommerce div.product.yjzan ul.tabs li {
     padding: 0; }
 .woocommerce div.product.yjzan ul.tabs li a {
-    padding: .8em 1.2em;
-    line-height: 1; }
+    padding:6px 30px;line-height:32px }
 .woocommerce div.product.yjzan ul.tabs li:after,
 .woocommerce div.product.yjzan ul.tabs li:before {
     border: 0;
