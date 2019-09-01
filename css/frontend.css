@@ -592,7 +592,7 @@
     display: -ms-flexbox;
     display: flex; }
 .yjzan-widget-wrap > .yjzan-element {
-    width: 100%; overflow: hidden }
+    width: 100%; }
 
 .yjzan-widget {
     position: relative; }
@@ -3538,6 +3538,7 @@ button.swiper-pagination-bullet {
     padding-bottom:80%;
     background-color: #fef9ff;
     overflow: hidden;
+    background-position: center !important;
 }
 
 .yjz-header {
@@ -3692,11 +3693,13 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 .yjzan-add-to-cart table.variations td.label{width:120px;!important;}
 .yjzan-add-to-cart table.variations td.value {width:200px;!important;}
 .yjzan-add-to-cart .reset_variations{position:absolute;top:7px;left:190px}
-.single_add_to_cart_button{padding-right:15px!important;padding-left:15px!important;  }
+.single_add_to_cart_button{padding-right:15px!important;padding-left:15px!important;min-width: 100px  }
 @media (max-width: 1024px)
 {
     .quantity{width: 90px;}
 }
 .woocommerce-variation-price {font-size: 20px;}
 .woocommerce-variation-availability { padding-bottom: 10px;color: #666;font-size: 12px;}
-.single_cart_button{background-color:#222;border:0;-webkit-border-radius:2px;border-radius:2px;-webkit-box-shadow:none;box-shadow:none;color:#fff;cursor:pointer;display:inline-block;font-size:14px;font-weight:800;line-height:1;text-shadow:none;-webkit-transition:background .2s;transition:background .2s;margin-left:10px;padding-left:15px;padding-right:15px;padding-top:20px}
+.single_cart_button{background-color:#f97f22;border:0;-webkit-border-radius:2px;border-radius:2px;-webkit-box-shadow:none;box-shadow:none;color:#fff;cursor:pointer;display:inline-block;font-size:14px;font-weight:800;line-height:1;text-shadow:none;-webkit-transition:background .2s;transition:background .2s;margin-left:10px;padding-left:15px;padding-right:15px;padding-top:20px}.woocommerce-Price-amount.amount{margin-right: 3px;margin-left: 3px;}
+.yjzan-widget-woocommerce-product-meta {overflow: hidden;}
+.variations_form cart .reset_variations {position: absolute;left: 170px;}
