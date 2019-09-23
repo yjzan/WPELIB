@@ -3696,7 +3696,12 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 .single_add_to_cart_button{padding-right:15px!important;padding-left:15px!important;min-width: 100px  }
 @media (max-width: 1024px)
 {
-    .quantity{width: 90px;}
+    .quantity{width: 75px;}
+    #wpadminbar{display: none}
+    .woocommerce-checkout label {
+        font-size: 10px;
+        padding: 10px 0px;
+    }
 }
 .woocommerce-variation-price {font-size: 20px;}
 .woocommerce-variation-availability { padding-bottom: 10px;color: #666;font-size: 12px;}
