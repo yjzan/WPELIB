@@ -1185,7 +1185,7 @@ body.yjzan-controls-ready .yjzan-panel #yjzan-panel-elements-loading {
   position: absolute;
   padding-left: 15px;
   bottom: 0px;
-  width: 110px;
+  width: 100%;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;

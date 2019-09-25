@@ -5109,6 +5109,7 @@
                     var elementPosition = this.getBoundingClientRect();
 
                     if ('dragleave' === event.type && !(event.clientX < elementPosition.left || event.clientX >= elementPosition.right || event.clientY < elementPosition.top || event.clientY >= elementPosition.bottom)) {
+                        $(currentElement).removeClass(settings.currentElementClass);
                         return;
                     }
 
