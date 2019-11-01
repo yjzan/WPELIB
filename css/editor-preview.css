@@ -1936,7 +1936,27 @@ html.yjzan-html {
 }
 
 .yjzan-editor-active .yjzan-widget.yjzan-loading {
-  opacity: .3; }
+  opacity: .6; }
+
+.yjzan-editor-active .yjzan-loading::after {
+  content: "\f110";
+  font: normal normal normal 14px/1 FontAwesome;
+  -webkit-animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
+  opacity: 1 !important;
+  color: #000;
+  position: absolute;
+  top: 40%;
+  left: 48%;
+  font-size: 18px;
+}
+
+.yjzan-add-new-section i {
+  margin-right: 7px;
+  font-weight: normal;
+  font-size: 14px !important;
+}
+
 
 .yjzan-editor-active .yjzan-widget.yjzan-element-editable:hover, .yjzan-editor-active .yjzan-widget.yjzan-element-edit-mode:hover {
   outline: #999 dashed 1px !important; }

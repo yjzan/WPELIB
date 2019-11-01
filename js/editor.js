@@ -3570,6 +3570,12 @@
                 // Get current column details
                 var currentSize = +columnView.model.getSetting('_inline_size') || this.getColumnPercentSize(columnView.$el, columnView.$el.data('originalWidth'));
 
+
+                if('undefined' === typeof ui  )
+                {
+                    return;
+                }
+
                 ui.element.css({
                     width: '',
                     left: 'initial' // Fix for RTL resizing
@@ -17925,8 +17931,22 @@
 
                 this.getDeviceModeButton(currentDeviceMode).addClass('active');
 
-                // Change the footer icon
-                this.ui.deviceModeIcon.removeClass('eicon-device-' + previousDeviceMode).addClass('eicon-device-' + currentDeviceMode);
+
+                var p_class='iconfont icon-imac';
+                if(previousDeviceMode=='tablet') {
+                    p_class='iconfont icon-ipad';
+                }else if(previousDeviceMode=='mobile') {
+                    p_class='iconfont icon-mobilefill';
+                }
+
+                var c_class='iconfont icon-imac';
+                if(currentDeviceMode=='tablet') {
+                    c_class='iconfont icon-ipad';
+                }else if(currentDeviceMode=='mobile') {
+                    c_class='iconfont icon-mobilefill';
+                }
+
+                this.ui.deviceModeIcon.removeClass(p_class).addClass(c_class);
             },
 
             onResponsiveButtonsClick: function onResponsiveButtonsClick(event) {
