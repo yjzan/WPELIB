@@ -795,7 +795,7 @@
                         callback: this.options.model.trigger.bind(this.options.model, 'request:edit')
                     }, {
                         name: 'duplicate',
-                        icon: 'eicon-clone',
+                        icon: 'fa fa-copy',
                         title: yjzan.translate('duplicate'),
                         //shortcut: controlSign + '+D',
                         callback: this.duplicate.bind(this)
@@ -12795,8 +12795,7 @@
 
             onClickButtonPreview: function onClickButtonPreview() {
                 // Open immediately in order to avoid popup blockers.
-                this.previewWindow = open(yjzan.config.document.urls.wp_preview, 'wp-preview-' + yjzan.config.document.id);
-
+                this.previewWindow = open('/yjzview.php?url='+ window.escape(yjzan.config.document.urls.wp_preview) , 'wp-preview-' + yjzan.config.document.id);
                 if (yjzan.saver.isEditorChanged()) {
                     // Force save even if it's saving now.
                     if (yjzan.saver.isSaving) {
@@ -17942,9 +17941,15 @@
                 var c_class='iconfont icon-imac';
                 if(currentDeviceMode=='tablet') {
                     c_class='iconfont icon-ipad';
+                    document.getElementById("yjzan-preview-iframe").style.borderRadius='20px';
                 }else if(currentDeviceMode=='mobile') {
                     c_class='iconfont icon-mobilefill';
+                    document.getElementById("yjzan-preview-iframe").style.borderRadius='20px';
+                }else
+                {
+                    document.getElementById("yjzan-preview-iframe").style.borderRadius='0px';
                 }
+
 
                 this.ui.deviceModeIcon.removeClass(p_class).addClass(c_class);
             },

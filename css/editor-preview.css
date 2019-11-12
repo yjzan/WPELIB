@@ -2420,6 +2420,16 @@ html.yjzan-html {
 
 .yjzan-add-new-section {
   display: inline-block; }
+
+@media (max-width: 767px){
+  .yjzan-add-new-section .yjzan-add-section-area-button{
+    width: 85px!important;
+    font-size: 11px!important;
+    height: 30px!important;;
+  }
+}
+
+
 .yjzan-add-new-section .yjzan-add-section-area-button {
   display: -webkit-inline-box;
   display: -webkit-inline-flex;
