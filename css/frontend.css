@@ -2450,7 +2450,6 @@ body.yjzan-page .yjzan-widget-menu-anchor {
     cursor: pointer;
 }
 .yjzan-tabs-view-horizontal .yjzan-tab-title {
-    width:100px;
     width:auto;
 }
 .yjzan-tabs-view-vertical .yjzan-tab-title {
@@ -3620,13 +3619,9 @@ button.swiper-pagination-bullet {
 
 .yjz-product-img-wrap
 {
-    max-width: 100%;
-    height: 0;
-    padding-bottom:80%;
-    background-color: #fef9ff;
-    overflow: hidden;
-    background-position: center !important;
-    background-size:cover !important;
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
 }
 
 .yjz-header {
@@ -3666,8 +3661,10 @@ button.swiper-pagination-bullet {
 }
 
 .woocommerce-product-gallery__image .wp-post-image {
-    max-height: 500px;
+    max-height: 420px;
     width: 100%;
+    object-fit: contain;
+    border: 1px solid #ccc;
 }
 
 
@@ -3826,7 +3823,7 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 
     .yd-load-product-data-bt
     {
-        display: block!important;text-align: center;line-height: 40px;font-size: 12px; padding: 5px 0px;color: #aaa;letter-spacing: 2px;
+        display: block!important;text-align: center;line-height: 40px;font-size: 12px!important; padding: 5px 0px;color: #aaa;letter-spacing: 2px;margin-bottom: 110px;
     }
 }
 
@@ -4090,9 +4087,11 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 
     .yjz-product-swp-container,
     .yjz-product-swp-container .swiper-wrapper{
-        height: calc(100vh - 120px);
+        height: calc(100vh - 70px);
         z-index: 0;
     }
+    .yjz-product-tabs-box .yjz-product-left-box{ width: 80px;font-size: 12px!important;padding-top: 10px;}
+    .yjz-h-tabs-tag .swiper-slide span {font-size: 12px!important;}
 }
 
 @media (min-width: 1024px){
@@ -4101,6 +4100,9 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
         height: auto;
         z-index: 0;
     }
+    .yjz-product-tabs-box  .yjz-product-left-box .p-child-tag{padding: 6px 5px!important;}
+    .yjz-product-tabs-box .yjz-product-left-box{width: 80px!important;;margin-right: 8px;!important;}
+
 }
 
 
@@ -4603,5 +4605,107 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
     color:#999;
 }
 
+.yjzan-sticky--active.yjzan-sticky--effects {
+    top: 0px !important;
+}
 
+#yjz-product-ul{padding-bottom: 60px}
+.yjz-h-tabs-tag
+{
+    width: 100%;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 10px !important;
+    overflow: hidden;
+    max-width: 1400px;
+    margin: auto;
+    padding-top: 10px;
+}
+.yjz-h-tabs-tag .swiper-slide{width: auto;padding-right: 5px;padding-left: 15px;letter-spacing: 2px;font-size: 14px;}
+.yjz-h-tabs-tag .swiper-wrapper {
+    width: 100%;
+    height: 35px;
+    z-index: 0;
+}
+.yjz-h-tabs-tag .swiper-slide span{ cursor: pointer;}
+.yjz-h-tabs-tag .swiper-slide.active span {
+    border-bottom: 3px solid #53afe8;
+    padding-bottom: 12px;
+    color: #53afe8;
+}
 
+.yjz-product-tabs-box {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.yjz-product-tabs-box .yjz-product-left-box {
+    width: 100px;
+    background: rgba(242, 242, 242, 0.94);
+    margin-right: 10px;
+    border-left: 5px solid rgba(242, 242, 242, 0.94);
+    padding-top: 18px;
+    padding-bottom: 18px;
+    min-height: 400px;
+}
+.yjz-product-tabs-box .yjz-product-swp-container {
+    width: calc(100% - 95px);
+    background: #ffffff;
+}
+
+.yjz-product-tabs-box  .yjz-product-left-box .p-child-tag {
+    height: auto;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+.yjz-product-left-box .p-child-tag.active {
+    background:#fff;
+}
+.yjz-product-left-box .p-child-tag span {
+    line-height: 35px;
+}
+.yjz_product_detail{
+    width: 100%;
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: auto;
+    z-index: 99;
+    display: none;
+    background: #ffffff;
+}
+
+.yjz_product_detail_iframe {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.yjz_product_detail .fa.fa-spinner {
+    position: fixed;
+    z-index: 999;
+    width: 20px;
+    top: 50%;
+    left: 50%;
+    font-size: 22px;
+    color:#999;
+}
+
+#return_btn_product {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 28px !important;
+    color:rgba(55,55,55,0.7);
+    cursor: pointer;
+    z-index: 9999;
+    padding: 10px;
+}
+
+.yjzan-widget-nav-menu .yjzan-nav-menu--dropdown
+{
+    font-weight: 400!important;
+}

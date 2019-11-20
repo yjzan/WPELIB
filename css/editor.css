@@ -2400,7 +2400,7 @@ body:not(.yjzan-device-mobile) .yjzan-control.yjzan-control-responsive-mobile {
 }
 
 
-.yjzan-control-input-wrapper .dimensions_wrap
+.yjzan-control-input-wrapper .dimensions_wrap:not(.yjz_number_box)
 {
     padding: 8px 15px 10px 15px;
     background: #888;
@@ -2413,6 +2413,22 @@ body:not(.yjzan-device-mobile) .yjzan-control.yjzan-control-responsive-mobile {
     border-radius: 5px;
     display: none;
 }
+
+
+.yjzan-control-input-wrapper .dimensions_wrap.yjz_number_box
+{
+    padding: 8px 15px 10px 15px;
+    background: #888;
+    margin-top: 5px;
+    position: absolute;
+    width: 70%;
+    z-index: 1;
+    box-shadow: 2px 5px 10px #000;
+    border-radius: 5px;
+    display: none;
+    right: 10px;
+}
+
 
 .yjzan-control-type-dimensions li input,
 .yjzan-control-type-dimensions li .yjzan-link-dimensions {

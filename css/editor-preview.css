@@ -2104,12 +2104,11 @@ html.yjzan-html {
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
+  top: 2px;
   bottom: 0;
   outline: 2px solid #2b87da; }
 
-.yjzan-column:hover > .yjzan-element-overlay, .yjzan-column.yjzan-element-editable > .yjzan-element-overlay {
-  border: 1px solid #ffffff; }
+
 .yjzan-column:hover > .yjzan-element-overlay:after, .yjzan-column.yjzan-element-editable > .yjzan-element-overlay:after {
   content: ''; }
 
@@ -2159,7 +2158,7 @@ html.yjzan-html {
 
 .yjzan-editor-section-settings {
   height: 20px;
-  top: -20px;
+  top: -19px;
   left: 50%;
   margin-left: -48px;
   -webkit-box-shadow: 0px -2px 8px rgba(0, 0, 0, 0.05);
@@ -2630,7 +2629,6 @@ html.yjzan-html {
 .yjzan-top-column:hover  .oleft{
   width: 10px;
   height: 10px;
-
   border-radius: 30px;
   border:#0086B3 2px solid;
   position: absolute;
@@ -2638,4 +2636,9 @@ html.yjzan-html {
   left: -5px;
   background-color: #FFFFFF;
   z-index: 2;
+}
+
+.yjzan-top-column.yjzan-element-edit-mode,
+.yjzan-inner-column.yjzan-element-edit-mode{
+  padding-top: 10px;
 }

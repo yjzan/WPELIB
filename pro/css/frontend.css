@@ -2771,7 +2771,7 @@
     display: -webkit-flex;
     display: -ms-flexbox;
     display: flex;
-    font-weight: 100
+    font-weight: 300
 }
 
 .yjzan-share-btn__title {
@@ -3398,7 +3398,7 @@ body.rtl.woocommerce #content div.product .yjzan-widget-woocommerce-product-imag
 }
 
 .yjzan-products-grid nav.woocommerce-pagination {
-    margin-top: 40px
+    margin-top: 80px
 }
 
 .yjzan-products-grid:not(.yjzan-show-pagination-border-yes) nav.woocommerce-pagination ul {
@@ -7025,7 +7025,7 @@ ul.yjzan-nav-menu--dropdown a,ul.yjzan-nav-menu--dropdown a:focus,ul.yjzan-nav-m
 .yjzan-button.yjzan-author-box__button {
     border: solid 2px #55595c;
     font-size: 15px;
-    font-weight: 100;
+    font-weight: 300;
     padding: 10px 18px
 }
 

@@ -13871,7 +13871,62 @@
             ControlNumberItemView;
 
         ControlNumberItemView = ControlBaseDataView.extend({
+            ui: function ui() {
+                var ui = ControlBaseDataView.prototype.ui.apply(this, arguments);
+                ui.inputs = '.tooltip-target';
+                ui.inputswrap = '.dimensions_wrap';
+                ui.inputrange = '.yjz-dimensions';
+                return ui;
+            },
+            events: function events() {
+                return _.extend(ControlBaseDataView.prototype.events.apply(this, arguments), {
+                    'focus @ui.inputs' :'onShowSoild',
+                    'blur @ui.inputs' :'onHideSoild',
+                    'input @ui.inputrange' :'oninputrangeChange',
+                    'mouseup @ui.inputswrap' :'oninputsFoucs',
+                    'mouseup @ui.inputrange' :'oninputsFoucs'
+                });
+            },
+            oninputsFoucs:function oninputsFoucs()
+            {
+                var $thisControl = this.$(event.target);
+                var targetID = $thisControl.data('target');
+                $('#'+targetID).focus();
+            },
+            onHideSoild:function onHideSoild() // by jack
+            {
+                var $thisControl = this.$(event.target);
+                var rangeid = $thisControl.data('rangeid');
+                setTimeout( function(){
 
+                    var temp = $("#"+document.activeElement.id).data("rangeid");
+                    if(document.activeElement.id !='r_'+rangeid && temp!= rangeid)
+                        $('#w_'+rangeid).hide();
+                }, 200 );
+            },
+            oninputrangeChange:function oninputrangeChange()
+            {
+                var $thisControl = this.$(event.target);
+                $thisControl.parent().data('status',1);
+                var targetID = $thisControl.data('target');
+                $('#'+targetID).val($($thisControl).val());
+                $('#'+targetID).trigger("input");
+            },
+            onShowSoild:function onShowSoild()
+            {
+                var $thisControl = this.$(event.target);
+                var rangeid = $thisControl.data('rangeid');
+                $('#w_'+rangeid).data('status',1);
+                $('#w_'+rangeid).data('target',$thisControl.attr('id'));
+                $('#r_'+rangeid).data('target',$thisControl.attr('id'));
+                if($thisControl.val()!='')
+                {
+                    $('#r_'+rangeid).val($thisControl.val());
+                }else
+                    $('#r_'+rangeid).val(0);
+
+                $('#w_'+rangeid).show();
+            },
             registerValidators: function registerValidators() {
                 ControlBaseDataView.prototype.registerValidators.apply(this, arguments);
 
