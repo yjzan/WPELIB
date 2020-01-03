@@ -2638,7 +2638,13 @@ html.yjzan-html {
   z-index: 2;
 }
 
-.yjzan-top-column.yjzan-element-edit-mode,
-.yjzan-inner-column.yjzan-element-edit-mode{
-  padding-top: 10px;
+/*.yjzan-top-column.yjzan-element-edit-mode,*/
+/*.yjzan-inner-column.yjzan-element-edit-mode{*/
+  /*padding-top: 10px;*/
+/*}*/
+
+.yjzan-section--handles-inside .yjzan-top-column.yjzan-element-edit-mode,
+.yjzan-section--handles-inside .yjzan-inner-column.yjzan-element-edit-mode
+{
+  padding-top: 0px;
 }

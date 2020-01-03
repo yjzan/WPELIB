@@ -12795,7 +12795,7 @@
 
             onClickButtonPreview: function onClickButtonPreview() {
                 // Open immediately in order to avoid popup blockers.
-                this.previewWindow = open('/yjzview.php?url='+ window.escape(yjzan.config.document.urls.wp_preview) , 'wp-preview-' + yjzan.config.document.id);
+                this.previewWindow = open('/yjzview.php?yjzview=1&url='+ window.escape(yjzan.config.document.urls.wp_preview) , 'wp-preview-' + yjzan.config.document.id);
                 if (yjzan.saver.isEditorChanged()) {
                     // Force save even if it's saving now.
                     if (yjzan.saver.isSaving) {
@@ -12865,7 +12865,7 @@
                 if (this.previewWindow) {
                     // Refresh URL form updated config.
                     try {
-                        this.previewWindow.location.href = yjzan.config.document.urls.wp_preview;
+                        this.previewWindow.location.href = '/yjzview.php?yjzview=1&url='+ window.escape(yjzan.config.document.urls.wp_preview);
                     } catch (e) {
                         // If the this.previewWindow is closed or it's domain was changed.
                         // Do nothing.
@@ -17996,10 +17996,10 @@
                 var c_class='iconfont icon-imac';
                 if(currentDeviceMode=='tablet') {
                     c_class='iconfont icon-ipad';
-                    document.getElementById("yjzan-preview-iframe").style.borderRadius='20px';
+                    document.getElementById("yjzan-preview-iframe").style.borderRadius='0px';
                 }else if(currentDeviceMode=='mobile') {
                     c_class='iconfont icon-mobilefill';
-                    document.getElementById("yjzan-preview-iframe").style.borderRadius='20px';
+                    document.getElementById("yjzan-preview-iframe").style.borderRadius='0px';
                 }else
                 {
                     document.getElementById("yjzan-preview-iframe").style.borderRadius='0px';

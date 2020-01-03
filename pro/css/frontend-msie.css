@@ -2650,9 +2650,6 @@ body.rtl.woocommerce-page div.product .yjzan-widget-woocommerce-product-images d
 .yjzan-widget-woocommerce-menu-cart.toggle-icon--cart-light .yjzan-menu-cart__toggle .yjzan-button-icon i:before {
   content: '\e1015'; }
 
-.yjzan-widget-woocommerce-menu-cart.toggle-icon--cart-medium .yjzan-menu-cart__toggle .yjzan-button-icon i:before {
-  content: '\e1016'; }
-
 .yjzan-widget-woocommerce-menu-cart.toggle-icon--cart-solid .yjzan-menu-cart__toggle .yjzan-button-icon i:before {
   content: '\e1017'; }
 

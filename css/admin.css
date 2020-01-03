@@ -915,15 +915,7 @@ body .block-editor #yjzan-switch-mode {
     cursor: pointer; }
     #yjzan-new-template__form .yjzan-form-field__select__wrapper {
       position: relative; }
-      #yjzan-new-template__form .yjzan-form-field__select__wrapper:after {
-        font-family: eicons;
-        content: '\e955';
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        -webkit-transform: translateY(-50%);
-            -ms-transform: translateY(-50%);
-                transform: translateY(-50%); }
+
   #yjzan-new-template__form__submit {
     width: 100%;
     height: 50px;
