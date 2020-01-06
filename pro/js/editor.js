@@ -81,300 +81,232 @@
     /******/
     /******/
     /******/ 	// Load entry module and return exports
-    /******/ 	return __webpack_require__(__webpack_require__.s = 181);
+    /******/ 	return __webpack_require__(__webpack_require__.s = 11);
     /******/ })
 /************************************************************************/
-/******/ ({
-
-    /***/ 1:
+/******/ ([
+    /* 0 */,
+    /* 1 */
     /***/ (function(module, exports, __webpack_require__) {
 
         "use strict";
 
 
-        Object.defineProperty(exports, "__esModule", {
-            value: true
-        });
-        var userAgent = navigator.userAgent;
+        var ElementEditorModule = __webpack_require__(4);
 
-        exports.default = {
-            webkit: -1 !== userAgent.indexOf('AppleWebKit'),
-            firefox: -1 !== userAgent.indexOf('Firefox'),
-            ie: /Trident|MSIE/.test(userAgent),
-            edge: -1 !== userAgent.indexOf('Edge'),
-            mac: -1 !== userAgent.indexOf('Macintosh')
-        };
+        module.exports = ElementEditorModule.extend({
+            cache: {},
+
+            getName: function getName() {
+                return '';
+            },
+
+            fetchCache: function fetchCache(type, cacheKey, requestArgs) {
+                var _this = this;
+
+                return yjzanPro.ajax.addRequest('forms_panel_action_data', {
+                    data: requestArgs,
+                    success: function success(data) {
+                        _this.cache[type] = _.extend({}, _this.cache[type]);
+                        _this.cache[type][cacheKey] = data[type];
+                    }
+                });
+            },
+
+            updateOptions: function updateOptions(name, options) {
+                var controlView = this.getEditorControlView(name);
+
+                if (controlView) {
+                    this.getEditorControlModel(name).set('options', options);
+
+                    controlView.render();
+                }
+            },
+
+            onInit: function onInit() {
+                this.addSectionListener('section_' + this.getName(), this.onSectionActive);
+            },
+
+            onSectionActive: function onSectionActive() {
+                this.onApiUpdate();
+            },
+
+            onApiUpdate: function onApiUpdate() {}
+        });
 
         /***/ }),
-
-    /***/ 13:
+    /* 2 */,
+    /* 3 */,
+    /* 4 */
     /***/ (function(module, exports, __webpack_require__) {
 
         "use strict";
 
 
-        /**
-         * Handles managing all events for whatever you plug it into. Priorities for hooks are based on lowest to highest in
-         * that, lowest priority hooks are fired first.
-         */
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            elementType: null,
 
-        var EventManager = function EventManager() {
-            var slice = Array.prototype.slice,
-                MethodsAvailable;
+            __construct: function __construct(elementType) {
+                this.elementType = elementType;
 
-            /**
-             * Contains the hooks that get registered with this EventManager. The array for storage utilizes a "flat"
-             * object literal such that looking up the hook utilizes the native object literal hash.
-             */
-            var STORAGE = {
-                actions: {},
-                filters: {}
-            };
+                this.addEditorListener();
+            },
 
-            /**
-             * Removes the specified hook by resetting the value of it.
-             *
-             * @param type Type of hook, either 'actions' or 'filters'
-             * @param hook The hook (namespace.identifier) to remove
-             *
-             * @private
-             */
-            function _removeHook(type, hook, callback, context) {
-                var handlers, handler, i;
+            addEditorListener: function addEditorListener() {
+                var self = this;
 
-                if (!STORAGE[type][hook]) {
+                if (self.onElementChange) {
+                    var eventName = 'change';
+
+                    if ('global' !== self.elementType) {
+                        eventName += ':' + self.elementType;
+                    }
+
+                    yjzan.channels.editor.on(eventName, function (controlView, elementView) {
+                        self.onElementChange(controlView.model.get('name'), controlView, elementView);
+                    });
+                }
+            },
+
+            addControlSpinner: function addControlSpinner(name) {
+                var $el = this.getEditorControlView(name).$el,
+                    $input = $el.find(':input');
+
+                if ($input.attr('disabled')) {
                     return;
                 }
-                if (!callback) {
-                    STORAGE[type][hook] = [];
-                } else {
-                    handlers = STORAGE[type][hook];
-                    if (!context) {
-                        for (i = handlers.length; i--;) {
-                            if (handlers[i].callback === callback) {
-                                handlers.splice(i, 1);
-                            }
-                        }
-                    } else {
-                        for (i = handlers.length; i--;) {
-                            handler = handlers[i];
-                            if (handler.callback === callback && handler.context === context) {
-                                handlers.splice(i, 1);
-                            }
-                        }
+
+                $input.attr('disabled', true);
+
+                $el.find('.yjzan-control-title').after('<span class="yjzan-control-spinner"><i class="fa fa-spinner fa-spin"></i>&nbsp;</span>');
+            },
+
+            removeControlSpinner: function removeControlSpinner(name) {
+                var $controlEl = this.getEditorControlView(name).$el;
+
+                $controlEl.find(':input').attr('disabled', false);
+                $controlEl.find('yjzan-control-spinner').remove();
+            },
+
+            addSectionListener: function addSectionListener(section, callback) {
+                var self = this;
+
+                yjzan.channels.editor.on('section:activated', function (sectionName, editor) {
+                    var model = editor.getOption('editedElementView').getEditModel(),
+                        currentElementType = model.get('elType'),
+                        _arguments = arguments;
+
+                    if ('widget' === currentElementType) {
+                        currentElementType = model.get('widgetType');
                     }
-                }
-            }
 
-            /**
-             * Use an insert sort for keeping our hooks organized based on priority. This function is ridiculously faster
-             * than bubble sort, etc: http://jsperf.com/javascript-sort
-             *
-             * @param hooks The custom array containing all of the appropriate hooks to perform an insert sort on.
-             * @private
-             */
-            function _hookInsertSort(hooks) {
-                var tmpHook, j, prevHook;
-                for (var i = 1, len = hooks.length; i < len; i++) {
-                    tmpHook = hooks[i];
-                    j = i;
-                    while ((prevHook = hooks[j - 1]) && prevHook.priority > tmpHook.priority) {
-                        hooks[j] = hooks[j - 1];
-                        --j;
+                    if (self.elementType === currentElementType && section === sectionName) {
+                        setTimeout(function () {
+                            callback.apply(self, _arguments);
+                        }, 10);
                     }
-                    hooks[j] = tmpHook;
-                }
-
-                return hooks;
+                });
             }
-
-            /**
-             * Adds the hook to the appropriate storage container
-             *
-             * @param type 'actions' or 'filters'
-             * @param hook The hook (namespace.identifier) to add to our event manager
-             * @param callback The function that will be called when the hook is executed.
-             * @param priority The priority of this hook. Must be an integer.
-             * @param [context] A value to be used for this
-             * @private
-             */
-            function _addHook(type, hook, callback, priority, context) {
-                var hookObject = {
-                    callback: callback,
-                    priority: priority,
-                    context: context
-                };
-
-                // Utilize 'prop itself' : http://jsperf.com/hasownproperty-vs-in-vs-undefined/19
-                var hooks = STORAGE[type][hook];
-                if (hooks) {
-                    // TEMP FIX BUG
-                    var hasSameCallback = false;
-                    jQuery.each(hooks, function () {
-                        if (this.callback === callback) {
-                            hasSameCallback = true;
-                            return false;
-                        }
-                    });
-
-                    if (hasSameCallback) {
-                        return;
-                    }
-                    // END TEMP FIX BUG
-
-                    hooks.push(hookObject);
-                    hooks = _hookInsertSort(hooks);
-                } else {
-                    hooks = [hookObject];
-                }
-
-                STORAGE[type][hook] = hooks;
-            }
-
-            /**
-             * Runs the specified hook. If it is an action, the value is not modified but if it is a filter, it is.
-             *
-             * @param type 'actions' or 'filters'
-             * @param hook The hook ( namespace.identifier ) to be ran.
-             * @param args Arguments to pass to the action/filter. If it's a filter, args is actually a single parameter.
-             * @private
-             */
-            function _runHook(type, hook, args) {
-                var handlers = STORAGE[type][hook],
-                    i,
-                    len;
-
-                if (!handlers) {
-                    return 'filters' === type ? args[0] : false;
-                }
-
-                len = handlers.length;
-                if ('filters' === type) {
-                    for (i = 0; i < len; i++) {
-                        args[0] = handlers[i].callback.apply(handlers[i].context, args);
-                    }
-                } else {
-                    for (i = 0; i < len; i++) {
-                        handlers[i].callback.apply(handlers[i].context, args);
-                    }
-                }
-
-                return 'filters' === type ? args[0] : true;
-            }
-
-            /**
-             * Adds an action to the event manager.
-             *
-             * @param action Must contain namespace.identifier
-             * @param callback Must be a valid callback function before this action is added
-             * @param [priority=10] Used to control when the function is executed in relation to other callbacks bound to the same hook
-             * @param [context] Supply a value to be used for this
-             */
-            function addAction(action, callback, priority, context) {
-                if ('string' === typeof action && 'function' === typeof callback) {
-                    priority = parseInt(priority || 10, 10);
-                    _addHook('actions', action, callback, priority, context);
-                }
-
-                return MethodsAvailable;
-            }
-
-            /**
-             * Performs an action if it exists. You can pass as many arguments as you want to this function; the only rule is
-             * that the first argument must always be the action.
-             */
-            function doAction() /* action, arg1, arg2, ... */{
-                var args = slice.call(arguments);
-                var action = args.shift();
-
-                if ('string' === typeof action) {
-                    _runHook('actions', action, args);
-                }
-
-                return MethodsAvailable;
-            }
-
-            /**
-             * Removes the specified action if it contains a namespace.identifier & exists.
-             *
-             * @param action The action to remove
-             * @param [callback] Callback function to remove
-             */
-            function removeAction(action, callback) {
-                if ('string' === typeof action) {
-                    _removeHook('actions', action, callback);
-                }
-
-                return MethodsAvailable;
-            }
-
-            /**
-             * Adds a filter to the event manager.
-             *
-             * @param filter Must contain namespace.identifier
-             * @param callback Must be a valid callback function before this action is added
-             * @param [priority=10] Used to control when the function is executed in relation to other callbacks bound to the same hook
-             * @param [context] Supply a value to be used for this
-             */
-            function addFilter(filter, callback, priority, context) {
-                if ('string' === typeof filter && 'function' === typeof callback) {
-                    priority = parseInt(priority || 10, 10);
-                    _addHook('filters', filter, callback, priority, context);
-                }
-
-                return MethodsAvailable;
-            }
-
-            /**
-             * Performs a filter if it exists. You should only ever pass 1 argument to be filtered. The only rule is that
-             * the first argument must always be the filter.
-             */
-            function applyFilters() /* filter, filtered arg, arg2, ... */{
-                var args = slice.call(arguments);
-                var filter = args.shift();
-
-                if ('string' === typeof filter) {
-                    return _runHook('filters', filter, args);
-                }
-
-                return MethodsAvailable;
-            }
-
-            /**
-             * Removes the specified filter if it contains a namespace.identifier & exists.
-             *
-             * @param filter The action to remove
-             * @param [callback] Callback function to remove
-             */
-            function removeFilter(filter, callback) {
-                if ('string' === typeof filter) {
-                    _removeHook('filters', filter, callback);
-                }
-
-                return MethodsAvailable;
-            }
-
-            /**
-             * Maintain a reference to the object scope so our public methods never get confusing.
-             */
-            MethodsAvailable = {
-                removeFilter: removeFilter,
-                applyFilters: applyFilters,
-                addFilter: addFilter,
-                removeAction: removeAction,
-                doAction: doAction,
-                addAction: addAction
-            };
-
-            // return all of the publicly available methods
-            return MethodsAvailable;
-        };
-
-        module.exports = EventManager;
+        });
 
         /***/ }),
+    /* 5 */,
+    /* 6 */,
+    /* 7 */,
+    /* 8 */,
+    /* 9 */,
+    /* 10 */,
+    /* 11 */
+    /***/ (function(module, exports, __webpack_require__) {
 
-    /***/ 15:
+        "use strict";
+
+
+        var _editor = __webpack_require__(12);
+
+        var _editor2 = _interopRequireDefault(_editor);
+
+        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+        var YjzanPro = Marionette.Application.extend({
+            config: {},
+
+            modules: {},
+
+            initModules: function initModules() {
+                var QueryControl = __webpack_require__(14),
+                    Forms = __webpack_require__(16),
+                    Library = __webpack_require__(32),
+                    CustomCSS = __webpack_require__(34),
+                    // GlobalWidget = __webpack_require__(36),
+                    FlipBox = __webpack_require__(42),
+                    ShareButtons = __webpack_require__(43),
+                    AssetsManager = __webpack_require__(44),
+                    ThemeElements = __webpack_require__(46),
+                    ThemeBuilder = __webpack_require__(48);
+
+                this.modules = {
+                    queryControl: new QueryControl(),
+                    forms: new Forms(),
+                    library: new Library(),
+                    customCSS: new CustomCSS(),
+                    //globalWidget: new GlobalWidget(),
+                    flipBox: new FlipBox(),
+                    popup: new _editor2.default(),
+                    shareButtons: new ShareButtons(),
+                    assetsManager: new AssetsManager(),
+                    themeElements: new ThemeElements(),
+                    themeBuilder: new ThemeBuilder()
+                };
+            },
+
+            ajax: {
+                prepareArgs: function prepareArgs(args) {
+                    args[0] = 'pro_' + args[0];
+
+                    return args;
+                },
+
+                send: function send() {
+                    return yjzanCommon.ajax.send.apply(yjzanCommon.ajax, this.prepareArgs(arguments));
+                },
+
+                addRequest: function addRequest() {
+                    return yjzanCommon.ajax.addRequest.apply(yjzanCommon.ajax, this.prepareArgs(arguments));
+                }
+            },
+
+            translate: function translate(stringKey, templateArgs) {
+                return yjzanCommon.translate(stringKey, null, templateArgs, this.config.i18n);
+            },
+
+            onStart: function onStart() {
+                this.config = YjzanProConfig;
+
+                this.initModules();
+
+                jQuery(window).on('yjzan:init', this.onYjzanInit);
+            },
+
+            onYjzanInit: function onYjzanInit() {
+                yjzanPro.libraryRemoveGetProButtons();
+
+                yjzan.debug.addURLToWatch('yjzan-pro/assets');
+            },
+
+            libraryRemoveGetProButtons: function libraryRemoveGetProButtons() {
+                yjzan.hooks.addFilter('yjzan/editor/template-library/template/action-button', function (viewID, templateData) {
+                    return '#tmpl-yjzan-template-library-insert-button';
+                });
+            }
+        });
+
+        window.yjzanPro = new YjzanPro();
+
+        yjzanPro.start();
+
+        /***/ }),
+    /* 10 */
     /***/ (function(module, exports, __webpack_require__) {
 
         "use strict";
@@ -385,6 +317,12 @@
         });
 
         var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+        var _displaySettings = __webpack_require__(13);
+
+        var _displaySettings2 = _interopRequireDefault(_displaySettings);
+
+        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
         function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -392,195 +330,210 @@
 
         function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-        var _class = function (_yjzanModules$Mod) {
-            _inherits(_class, _yjzanModules$Mod);
+        var _class = function (_yjzanModules$edi) {
+            _inherits(_class, _yjzanModules$edi);
 
             function _class() {
+                var _ref;
+
                 _classCallCheck(this, _class);
 
-                return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
+                }
+
+                var _this = _possibleConstructorReturn(this, (_ref = _class.__proto__ || Object.getPrototypeOf(_class)).call.apply(_ref, [this].concat(args)));
+
+                _this.displaySettingsTypes = {
+                    triggers: {
+                        icon: 'eicon-click'
+                    },
+                    timing: {
+                        icon: 'fa fa-cog'
+                    }
+                };
+                return _this;
             }
 
             _createClass(_class, [{
-                key: 'get',
-                value: function get(key, options) {
-                    options = options || {};
+                key: 'initDisplaySettingsModels',
+                value: function initDisplaySettingsModels() {
+                    var config = yjzan.config.document.displaySettings;
 
-                    var storage = void 0;
+                    jQuery.each(this.displaySettingsTypes, function (type, data) {
+                        data.model = new yjzanModules.editor.elements.models.BaseSettings(config[type].settings, { controls: config[type].controls });
+                    });
+                }
+            }, {
+                key: 'addDisplaySettingsPublishScreens',
+                value: function addDisplaySettingsPublishScreens(publishLayout) {
+                    jQuery.each(this.displaySettingsTypes, function (type, data) {
+                        var model = data.model;
 
-                    try {
-                        storage = options.session ? sessionStorage : localStorage;
-                    } catch (e) {
-                        return key ? undefined : {};
-                    }
+                        publishLayout.addScreen({
+                            View: _displaySettings2.default,
+                            viewOptions: {
+                                name: type,
+                                id: 'yjzan-popup-' + type + '__controls',
+                                model: model,
+                                controls: model.controls
+                            },
+                            name: type,
+                            title: yjzanPro.translate(type),
+                            description: yjzanPro.translate('popup_publish_screen_' + type + '_description'),
+                            image: yjzanPro.config.urls.modules + ('popup/assets/images/' + type + '-tab.svg')
+                        });
+                    });
+                }
+            }, {
+                key: 'addPanelFooterSubmenuItems',
+                value: function addPanelFooterSubmenuItems() {
+                    var _this2 = this;
 
-                    var yjzanStorage = storage.getItem('yjzan');
+                    jQuery.each(this.displaySettingsTypes, function (type, data) {
+                        yjzan.getPanelView().footer.currentView.addSubMenuItem('saver-options', {
+                            before: 'save-template',
+                            name: type,
+                            icon: data.icon,
+                            title: yjzanPro.translate(type),
+                            callback: function callback() {
+                                return _this2.onPanelFooterSubmenuItemClick(type);
+                            }
+                        });
+                    });
+                }
+            }, {
+                key: 'addLibraryScreen',
+                value: function addLibraryScreen() {
+                    var screens = yjzan.templates.getScreens(),
+                        pagesIndex = screens.indexOf(_.findWhere(screens, { type: 'pages' }));
 
-                    if (yjzanStorage) {
-                        yjzanStorage = JSON.parse(yjzanStorage);
-                    } else {
-                        yjzanStorage = {};
-                    }
-
-                    if (!yjzanStorage.__expiration) {
-                        yjzanStorage.__expiration = {};
-                    }
-
-                    var expiration = yjzanStorage.__expiration;
-
-                    var expirationToCheck = [];
-
-                    if (key) {
-                        if (expiration[key]) {
-                            expirationToCheck = [key];
-                        }
-                    } else {
-                        expirationToCheck = Object.keys(expiration);
-                    }
-
-                    var entryExpired = false;
-
-                    expirationToCheck.forEach(function (expirationKey) {
-                        if (new Date(expiration[expirationKey]) < new Date()) {
-                            delete yjzanStorage[expirationKey];
-
-                            delete expiration[expirationKey];
-
-                            entryExpired = true;
-                        }
+                    screens.splice(pagesIndex - 1, 1, {
+                        name: 'popups',
+                        source: 'remote',
+                        type: 'popup',
+                        title: yjzanPro.translate('popups')
                     });
 
-                    if (entryExpired) {
-                        this.save(yjzanStorage, options.session);
-                    }
-
-                    if (key) {
-                        return yjzanStorage[key];
-                    }
-
-                    return yjzanStorage;
+                    yjzan.templates.setDefaultScreen('popups');
                 }
             }, {
-                key: 'set',
-                value: function set(key, value, options) {
-                    options = options || {};
+                key: 'initIntroduction',
+                value: function initIntroduction() {
+                    var introduction = void 0;
 
-                    var yjzanStorage = this.get(null, options);
+                    this.getIntroduction = function () {
+                        if (!introduction) {
+                            introduction = new yjzanModules.editor.utils.Introduction({
+                                introductionKey: 'popupSettings',
+                                dialogOptions: {
+                                    id: 'yjzan-popup-settings-introduction',
+                                    headerMessage: '<i class="eicon-info"></i>' + yjzanPro.translate('popup_settings_introduction_title'),
+                                    message: yjzanPro.translate('popup_settings_introduction_message'),
+                                    closeButton: true,
+                                    closeButtonClass: 'eicon-close',
+                                    position: {
+                                        my: 'left bottom',
+                                        at: 'right bottom-5',
+                                        autoRefresh: true
+                                    },
+                                    hide: {
+                                        onOutsideClick: false
+                                    }
+                                }
+                            });
+                        }
 
-                    yjzanStorage[key] = value;
-
-                    if (options.lifetimeInSeconds) {
-                        var date = new Date();
-
-                        date.setTime(date.getTime() + options.lifetimeInSeconds * 1000);
-
-                        yjzanStorage.__expiration[key] = date.getTime();
-                    }
-
-                    this.save(yjzanStorage, options.session);
+                        return introduction;
+                    };
                 }
             }, {
-                key: 'save',
-                value: function save(object, session) {
-                    var storage = void 0;
+                key: 'onYjzanInit',
+                value: function onYjzanInit() {
+                    var _this3 = this;
 
-                    try {
-                        storage = session ? sessionStorage : localStorage;
-                    } catch (e) {
+                    if ('popup' !== yjzan.config.document.type) {
                         return;
                     }
 
-                    storage.setItem('yjzan', JSON.stringify(object));
+                    yjzan.on('panel:init', function () {
+                        return _this3.onYjzanPanelInit();
+                    });
+
+                    yjzan.saver.on('save', function () {
+                        return _this3.onEditorSave();
+                    });
+
+                    this.addLibraryScreen();
+                }
+            }, {
+                key: 'onYjzanPanelInit',
+                value: function onYjzanPanelInit() {
+                    this.initDisplaySettingsModels();
+
+                    yjzanPro.modules.themeBuilder.on('publish-layout:init', this.addDisplaySettingsPublishScreens.bind(this));
+
+                    this.addPanelFooterSubmenuItems();
+
+                    if (!yjzan.config.user.introduction.popupSettings) {
+                        this.initIntroduction();
+                    }
+                }
+            }, {
+                key: 'onYjzanPreviewLoaded',
+                value: function onYjzanPreviewLoaded() {
+                    if ('popup' !== yjzan.config.document.type) {
+                        return;
+                    }
+
+                    var panel = yjzan.getPanelView();
+
+                    panel.footer.currentView.showSettingsPage('page_settings');
+
+                    if (!yjzan.config.user.introduction.popupSettings) {
+                        panel.getCurrentPageView().on('destroy', this.onPageSettingsDestroy.bind(this));
+                    }
+                }
+            }, {
+                key: 'onPageSettingsDestroy',
+                value: function onPageSettingsDestroy() {
+                    var introduction = this.getIntroduction();
+
+                    introduction.show(yjzan.getPanelView().footer.currentView.ui.settings[0]);
+
+                    introduction.setViewed();
+                }
+            }, {
+                key: 'onEditorSave',
+                value: function onEditorSave() {
+                    var settings = {};
+
+                    jQuery.each(this.displaySettingsTypes, function (type, data) {
+                        settings[type] = data.model.toJSON({ removeDefault: true });
+                    });
+
+                    yjzanPro.ajax.addRequest('popup_save_display_settings', {
+                        data: {
+                            settings: settings
+                        }
+                    });
+                }
+            }, {
+                key: 'onPanelFooterSubmenuItemClick',
+                value: function onPanelFooterSubmenuItemClick(type) {
+                    yjzanPro.modules.themeBuilder.showPublishModal();
+
+                    yjzanPro.modules.themeBuilder.getPublishLayout().modalContent.currentView.showScreenByName(type);
                 }
             }]);
 
             return _class;
-        }(yjzanModules.Module);
+        }(yjzanModules.editor.utils.Module);
 
         exports.default = _class;
 
         /***/ }),
-
-    /***/ 16:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        Object.defineProperty(exports, "__esModule", {
-            value: true
-        });
-
-        var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-        var _environment = __webpack_require__(1);
-
-        var _environment2 = _interopRequireDefault(_environment);
-
-        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-        function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-        var HotKeys = function () {
-            function HotKeys() {
-                _classCallCheck(this, HotKeys);
-
-                this.hotKeysHandlers = {};
-            }
-
-            _createClass(HotKeys, [{
-                key: 'applyHotKey',
-                value: function applyHotKey(event) {
-                    var handlers = this.hotKeysHandlers[event.which];
-
-                    if (!handlers) {
-                        return;
-                    }
-
-                    jQuery.each(handlers, function (key, handler) {
-                        if (handler.isWorthHandling && !handler.isWorthHandling(event)) {
-                            return;
-                        }
-
-                        // Fix for some keyboard sources that consider alt key as ctrl key
-                        if (!handler.allowAltKey && event.altKey) {
-                            return;
-                        }
-
-                        event.preventDefault();
-
-                        handler.handle(event);
-                    });
-                }
-            }, {
-                key: 'isControlEvent',
-                value: function isControlEvent(event) {
-                    return event[_environment2.default.mac ? 'metaKey' : 'ctrlKey'];
-                }
-            }, {
-                key: 'addHotKeyHandler',
-                value: function addHotKeyHandler(keyCode, handlerName, handler) {
-                    if (!this.hotKeysHandlers[keyCode]) {
-                        this.hotKeysHandlers[keyCode] = {};
-                    }
-
-                    this.hotKeysHandlers[keyCode][handlerName] = handler;
-                }
-            }, {
-                key: 'bindListener',
-                value: function bindListener($listener) {
-                    $listener.on('keydown', this.applyHotKey.bind(this));
-                }
-            }]);
-
-            return HotKeys;
-        }();
-
-        exports.default = HotKeys;
-
-        /***/ }),
-
-    /***/ 17:
+    /* 13 */
     /***/ (function(module, exports, __webpack_require__) {
 
         "use strict";
@@ -600,634 +553,8 @@
 
         function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-        var _class = function (_yjzanModules$Vie) {
-            _inherits(_class, _yjzanModules$Vie);
-
-            function _class() {
-                _classCallCheck(this, _class);
-
-                return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
-            }
-
-            _createClass(_class, [{
-                key: 'getDefaultSettings',
-                value: function getDefaultSettings() {
-                    return {
-                        selectors: {
-                            elements: '.yjzan-element',
-                            nestedDocumentElements: '.yjzan .yjzan-element'
-                        },
-                        classes: {
-                            editMode: 'yjzan-edit-mode'
-                        }
-                    };
-                }
-            }, {
-                key: 'getDefaultElements',
-                value: function getDefaultElements() {
-                    var selectors = this.getSettings('selectors');
-
-                    return {
-                        $elements: this.$element.find(selectors.elements).not(this.$element.find(selectors.nestedDocumentElements))
-                    };
-                }
-            }, {
-                key: 'getDocumentSettings',
-                value: function getDocumentSettings(setting) {
-                    var elementSettings = void 0;
-
-                    if (this.isEdit) {
-                        elementSettings = {};
-
-                        var settings = yjzan.settings.page.model;
-
-                        jQuery.each(settings.getActiveControls(), function (controlKey) {
-                            elementSettings[controlKey] = settings.attributes[controlKey];
-                        });
-                    } else {
-                        elementSettings = this.$element.data('yjzan-settings') || {};
-                    }
-
-                    return this.getItems(elementSettings, setting);
-                }
-            }, {
-                key: 'runElementsHandlers',
-                value: function runElementsHandlers() {
-                    this.elements.$elements.each(function (index, element) {
-                        return yjzanFrontend.elementsHandler.runReadyTrigger(element);
-                    });
-                }
-            }, {
-                key: 'onInit',
-                value: function onInit() {
-                    this.$element = this.getSettings('$element');
-
-                    _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'onInit', this).call(this);
-
-                    this.isEdit = this.$element.hasClass(this.getSettings('classes.editMode'));
-
-                    if (this.isEdit) {
-                        yjzan.settings.page.model.on('change', this.onSettingsChange.bind(this));
-                    } else {
-                        this.runElementsHandlers();
-                    }
-                }
-            }, {
-                key: 'onSettingsChange',
-                value: function onSettingsChange() {}
-            }]);
-
-            return _class;
-        }(yjzanModules.ViewModule);
-
-        exports.default = _class;
-
-        /***/ }),
-
-    /***/ 18:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        module.exports = yjzanModules.frontend.handlers.Base.extend({
-            $activeContent: null,
-
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    selectors: {
-                        tabTitle: '.yjzan-tab-title',
-                        tabContent: '.yjzan-tab-content'
-                    },
-                    classes: {
-                        active: 'yjzan-active'
-                    },
-                    showTabFn: 'show',
-                    hideTabFn: 'hide',
-                    toggleSelf: true,
-                    hidePrevious: true,
-                    autoExpand: true
-                };
-            },
-
-            getDefaultElements: function getDefaultElements() {
-                var selectors = this.getSettings('selectors');
-
-                return {
-                    $tabTitles: this.findElement(selectors.tabTitle),
-                    $tabContents: this.findElement(selectors.tabContent)
-                };
-            },
-
-            activateDefaultTab: function activateDefaultTab() {
-                var settings = this.getSettings();
-
-                if (!settings.autoExpand || 'editor' === settings.autoExpand && !this.isEdit) {
-                    return;
-                }
-
-                var defaultActiveTab = this.getEditSettings('activeItemIndex') || 1,
-                    originalToggleMethods = {
-                        showTabFn: settings.showTabFn,
-                        hideTabFn: settings.hideTabFn
-                    };
-
-                // Toggle tabs without animation to avoid jumping
-                this.setSettings({
-                    showTabFn: 'show',
-                    hideTabFn: 'hide'
-                });
-
-                this.changeActiveTab(defaultActiveTab);
-
-                // Return back original toggle effects
-                this.setSettings(originalToggleMethods);
-            },
-
-            deactivateActiveTab: function deactivateActiveTab(tabIndex) {
-                var settings = this.getSettings(),
-                    activeClass = settings.classes.active,
-                    activeFilter = tabIndex ? '[data-tab="' + tabIndex + '"]' : '.' + activeClass,
-                    $activeTitle = this.elements.$tabTitles.filter(activeFilter),
-                    $activeContent = this.elements.$tabContents.filter(activeFilter);
-
-                $activeTitle.add($activeContent).removeClass(activeClass);
-
-                $activeContent[settings.hideTabFn]();
-            },
-
-            activateTab: function activateTab(tabIndex) {
-                var settings = this.getSettings(),
-                    activeClass = settings.classes.active,
-                    $requestedTitle = this.elements.$tabTitles.filter('[data-tab="' + tabIndex + '"]'),
-                    $requestedContent = this.elements.$tabContents.filter('[data-tab="' + tabIndex + '"]');
-
-                $requestedTitle.add($requestedContent).addClass(activeClass);
-
-                $requestedContent[settings.showTabFn]();
-            },
-
-            isActiveTab: function isActiveTab(tabIndex) {
-                return this.elements.$tabTitles.filter('[data-tab="' + tabIndex + '"]').hasClass(this.getSettings('classes.active'));
-            },
-
-            bindEvents: function bindEvents() {
-                var _this = this;
-
-                this.elements.$tabTitles.on({
-                    keydown: function keydown(event) {
-                        if ('Enter' === event.key) {
-                            event.preventDefault();
-
-                            _this.changeActiveTab(event.currentTarget.dataset.tab);
-                        }
-                    },
-                    click: function click(event) {
-                        event.preventDefault();
-
-                        _this.changeActiveTab(event.currentTarget.dataset.tab);
-                    }
-                });
-            },
-
-            onInit: function onInit() {
-                yjzanModules.frontend.handlers.Base.prototype.onInit.apply(this, arguments);
-
-                this.activateDefaultTab();
-            },
-
-            onEditSettingsChange: function onEditSettingsChange(propertyName) {
-                if ('activeItemIndex' === propertyName) {
-                    this.activateDefaultTab();
-                }
-            },
-
-            changeActiveTab: function changeActiveTab(tabIndex) {
-                var isActiveTab = this.isActiveTab(tabIndex),
-                    settings = this.getSettings();
-
-                if ((settings.toggleSelf || !isActiveTab) && settings.hidePrevious) {
-                    this.deactivateActiveTab();
-                }
-
-                if (!settings.hidePrevious && isActiveTab) {
-                    this.deactivateActiveTab(tabIndex);
-                }
-
-                if (!isActiveTab) {
-                    this.activateTab(tabIndex);
-                }
-            }
-        });
-
-        /***/ }),
-
-    /***/ 181:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-        var _documentsManager = __webpack_require__(182);
-
-        var _documentsManager2 = _interopRequireDefault(_documentsManager);
-
-        var _hotKeys = __webpack_require__(16);
-
-        var _hotKeys2 = _interopRequireDefault(_hotKeys);
-
-        var _storage = __webpack_require__(15);
-
-        var _storage2 = _interopRequireDefault(_storage);
-
-        var _environment = __webpack_require__(1);
-
-        var _environment2 = _interopRequireDefault(_environment);
-
-        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-        function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-        function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-        function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /* global yjzanFrontendConfig */
-
-
-        var EventManager = __webpack_require__(13),
-            ElementsHandler = __webpack_require__(183),
-            YouTubeModule = __webpack_require__(195),
-            AnchorsModule = __webpack_require__(196),
-            LightboxModule = __webpack_require__(197);
-
-        var Frontend = function (_yjzanModules$Vie) {
-            _inherits(Frontend, _yjzanModules$Vie);
-
-            function Frontend() {
-                var _ref;
-
-                _classCallCheck(this, Frontend);
-
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
-                }
-
-                var _this = _possibleConstructorReturn(this, (_ref = Frontend.__proto__ || Object.getPrototypeOf(Frontend)).call.apply(_ref, [this].concat(args)));
-
-                _this.config = yjzanFrontendConfig;
-                return _this;
-            }
-
-            // TODO: BC since 2.5.0
-
-
-            _createClass(Frontend, [{
-                key: 'getDefaultSettings',
-                value: function getDefaultSettings() {
-                    return {
-                        selectors: {
-                            yjzan: '.yjzan',
-                            adminBar: '#wpadminbar'
-                        },
-                        classes: {
-                            ie: 'yjzan-msie'
-                        }
-                    };
-                }
-            }, {
-                key: 'getDefaultElements',
-                value: function getDefaultElements() {
-                    var defaultElements = {
-                        window: window,
-                        $window: jQuery(window),
-                        $document: jQuery(document),
-                        $head: jQuery(document.head),
-                        $body: jQuery(document.body),
-                        $deviceMode: jQuery('<span>', { id: 'yjzan-device-mode', class: 'yjzan-screen-only' })
-                    };
-                    defaultElements.$body.append(defaultElements.$deviceMode);
-
-                    return defaultElements;
-                }
-            }, {
-                key: 'bindEvents',
-                value: function bindEvents() {
-                    var _this2 = this;
-
-                    this.elements.$window.on('resize', function () {
-                        return _this2.setDeviceModeData();
-                    });
-                }
-
-                /**
-                 * @deprecated 2.4.0 Use just `this.elements` instead
-                 */
-
-            }, {
-                key: 'getElements',
-                value: function getElements(elementName) {
-                    return this.getItems(this.elements, elementName);
-                }
-
-                /**
-                 * @deprecated 2.4.0 This method was never in use
-                 */
-
-            }, {
-                key: 'getPageSettings',
-                value: function getPageSettings(settingName) {
-                    var settingsObject = this.isEditMode() ? yjzan.settings.page.model.attributes : this.config.settings.page;
-
-                    return this.getItems(settingsObject, settingName);
-                }
-            }, {
-                key: 'getGeneralSettings',
-                value: function getGeneralSettings(settingName) {
-                    var settingsObject = this.isEditMode() ? yjzan.settings.general.model.attributes : this.config.settings.general;
-
-                    return this.getItems(settingsObject, settingName);
-                }
-            }, {
-                key: 'getCurrentDeviceMode',
-                value: function getCurrentDeviceMode() {
-                    return getComputedStyle(this.elements.$deviceMode[0], ':after').content.replace(/"/g, '');
-                }
-            }, {
-                key: 'getCurrentDeviceSetting',
-                value: function getCurrentDeviceSetting(settings, settingKey) {
-                    var devices = ['desktop', 'tablet', 'mobile'],
-                        currentDeviceMode = yjzanFrontend.getCurrentDeviceMode();
-
-                    var currentDeviceIndex = devices.indexOf(currentDeviceMode);
-
-                    while (currentDeviceIndex > 0) {
-                        var currentDevice = devices[currentDeviceIndex],
-                            fullSettingKey = settingKey + '_' + currentDevice,
-                            deviceValue = settings[fullSettingKey];
-
-                        if (deviceValue) {
-                            return deviceValue;
-                        }
-
-                        currentDeviceIndex--;
-                    }
-
-                    return settings[settingKey];
-                }
-            }, {
-                key: 'isEditMode',
-                value: function isEditMode() {
-                    return this.config.environmentMode.edit;
-                }
-            }, {
-                key: 'isWPPreviewMode',
-                value: function isWPPreviewMode() {
-                    return this.config.environmentMode.wpPreview;
-                }
-            }, {
-                key: 'initDialogsManager',
-                value: function initDialogsManager() {
-                    var dialogsManager = void 0;
-
-                    this.getDialogsManager = function () {
-                        if (!dialogsManager) {
-                            dialogsManager = new DialogsManager.Instance();
-                        }
-
-                        return dialogsManager;
-                    };
-                }
-            }, {
-                key: 'initHotKeys',
-                value: function initHotKeys() {
-                    this.hotKeys = new _hotKeys2.default();
-
-                    this.hotKeys.bindListener(this.elements.$window);
-                }
-            }, {
-                key: 'initOnReadyComponents',
-                value: function initOnReadyComponents() {
-                    this.utils = {
-                        youtube: new YouTubeModule(),
-                        anchors: new AnchorsModule(),
-                        lightbox: new LightboxModule()
-                    };
-
-                    // TODO: BC since 2.4.0
-                    this.modules = {
-                        StretchElement: yjzanModules.frontend.tools.StretchElement,
-                        Masonry: yjzanModules.utils.Masonry
-                    };
-
-                    this.elementsHandler = new ElementsHandler(jQuery);
-
-                    this.documentsManager = new _documentsManager2.default();
-
-                    this.trigger('components:init');
-                }
-            }, {
-                key: 'initOnReadyElements',
-                value: function initOnReadyElements() {
-                    this.elements.$wpAdminBar = this.elements.$document.find(this.getSettings('selectors.adminBar'));
-                }
-            }, {
-                key: 'addIeCompatibility',
-                value: function addIeCompatibility() {
-                    var el = document.createElement('div'),
-                        supportsGrid = 'string' === typeof el.style.grid;
-
-                    if (!_environment2.default.ie && supportsGrid) {
-                        return;
-                    }
-
-                    this.elements.$body.addClass(this.getSettings('classes.ie'));
-
-                    var msieCss = '<link rel="stylesheet" id="yjzan-frontend-css-msie" href="' + this.config.urls.assets + 'css/frontend-msie.min.css?' + this.config.version + '" type="text/css" />';
-
-                    this.elements.$body.append(msieCss);
-                }
-            }, {
-                key: 'setDeviceModeData',
-                value: function setDeviceModeData() {
-                    this.elements.$body.attr('data-yjzan-device-mode', this.getCurrentDeviceMode());
-                }
-            }, {
-                key: 'addListenerOnce',
-                value: function addListenerOnce(listenerID, event, callback, to) {
-                    if (!to) {
-                        to = this.elements.$window;
-                    }
-
-                    if (!this.isEditMode()) {
-                        to.on(event, callback);
-
-                        return;
-                    }
-
-                    this.removeListeners(listenerID, event, to);
-
-                    if (to instanceof jQuery) {
-                        var eventNS = event + '.' + listenerID;
-
-                        to.on(eventNS, callback);
-                    } else {
-                        to.on(event, callback, listenerID);
-                    }
-                }
-            }, {
-                key: 'removeListeners',
-                value: function removeListeners(listenerID, event, callback, from) {
-                    if (!from) {
-                        from = this.elements.$window;
-                    }
-
-                    if (from instanceof jQuery) {
-                        var eventNS = event + '.' + listenerID;
-
-                        from.off(eventNS, callback);
-                    } else {
-                        from.off(event, callback, listenerID);
-                    }
-                }
-
-                // Based on underscore function
-
-            }, {
-                key: 'debounce',
-                value: function debounce(func, wait) {
-                    var timeout = void 0;
-
-                    return function () {
-                        var context = this,
-                            args = arguments;
-
-                        var later = function later() {
-                            timeout = null;
-
-                            func.apply(context, args);
-                        };
-
-                        var callNow = !timeout;
-
-                        clearTimeout(timeout);
-
-                        timeout = setTimeout(later, wait);
-
-                        if (callNow) {
-                            func.apply(context, args);
-                        }
-                    };
-                }
-            }, {
-                key: 'waypoint',
-                value: function waypoint($element, callback, options) {
-                    var defaultOptions = {
-                        offset: '100%',
-                        triggerOnce: true
-                    };
-
-                    options = jQuery.extend(defaultOptions, options);
-
-                    var correctCallback = function correctCallback() {
-                        var element = this.element || this,
-                            result = callback.apply(element, arguments);
-
-                        // If is Waypoint new API and is frontend
-                        if (options.triggerOnce && this.destroy) {
-                            this.destroy();
-                        }
-
-                        return result;
-                    };
-
-                    return $element.yjzanWaypoint(correctCallback, options);
-                }
-            }, {
-                key: 'muteMigrationTraces',
-                value: function muteMigrationTraces() {
-                    jQuery.migrateMute = true;
-
-                    jQuery.migrateTrace = false;
-                }
-            }, {
-                key: 'init',
-                value: function init() {
-                    this.hooks = new EventManager();
-
-                    this.storage = new _storage2.default();
-
-                    this.addIeCompatibility();
-
-                    this.setDeviceModeData();
-
-                    this.initDialogsManager();
-
-                    if (this.isEditMode()) {
-                        this.muteMigrationTraces();
-                    }
-
-                    // Keep this line before `initOnReadyComponents` call
-                    this.elements.$window.trigger('yjzan/frontend/init');
-
-                    if (!this.isEditMode()) {
-                        this.initHotKeys();
-                    }
-
-                    this.initOnReadyElements();
-
-                    this.initOnReadyComponents();
-                }
-            }, {
-                key: 'Module',
-                get: function get() {
-                    /*if ( this.isEditMode() ) {
-                     parent.yjzanCommon.helpers.deprecatedMethod( 'yjzanFrontend.Module', '2.5.0', 'yjzanModules.frontend.handlers.Base' );
-                     }*/
-
-                    return yjzanModules.frontend.handlers.Base;
-                }
-            }]);
-
-            return Frontend;
-        }(yjzanModules.ViewModule);
-
-        window.yjzanFrontend = new Frontend();
-
-        if (!yjzanFrontend.isEditMode()) {
-            jQuery(function () {
-                return yjzanFrontend.init();
-            });
-        }
-
-        /***/ }),
-
-    /***/ 182:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        Object.defineProperty(exports, "__esModule", {
-            value: true
-        });
-
-        var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-        var _document = __webpack_require__(17);
-
-        var _document2 = _interopRequireDefault(_document);
-
-        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-        function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-        function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-        function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-        var _class = function (_yjzanModules$Vie) {
-            _inherits(_class, _yjzanModules$Vie);
+        var _class = function (_yjzanModules$edi) {
+            _inherits(_class, _yjzanModules$edi);
 
             function _class() {
                 var _ref;
@@ -1240,1616 +567,3123 @@
 
                 var _this = _possibleConstructorReturn(this, (_ref = _class.__proto__ || Object.getPrototypeOf(_class)).call.apply(_ref, [this].concat(args)));
 
-                _this.documents = {};
+                _this.template = _.noop;
 
-                _this.initDocumentClasses();
+                _this.activeTab = 'content';
 
-                _this.attachDocumentsClasses();
+                _this.listenTo(_this.model, 'change', _this.onModelChange);
                 return _this;
             }
 
             _createClass(_class, [{
-                key: 'getDefaultSettings',
-                value: function getDefaultSettings() {
-                    return {
-                        selectors: {
-                            document: '.yjzan'
-                        }
-                    };
+                key: 'getNamespaceArray',
+                value: function getNamespaceArray() {
+                    return ['popup', 'display-settings'];
                 }
             }, {
-                key: 'getDefaultElements',
-                value: function getDefaultElements() {
-                    var selectors = this.getSettings('selectors');
-
-                    return {
-                        $documents: jQuery(selectors.document)
-                    };
+                key: 'className',
+                value: function className() {
+                    return _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'className', this).call(this) + ' yjzan-popup__display-settings';
                 }
             }, {
-                key: 'initDocumentClasses',
-                value: function initDocumentClasses() {
-                    this.documentClasses = {
-                        base: _document2.default
-                    };
-
-                    yjzanFrontend.hooks.doAction('yjzan/frontend/documents-manager/init-classes', this);
+                key: 'toggleGroup',
+                value: function toggleGroup(groupName, $groupElement) {
+                    $groupElement.toggleClass('yjzan-active', !!this.model.get(groupName));
                 }
             }, {
-                key: 'addDocumentClass',
-                value: function addDocumentClass(documentType, documentClass) {
-                    this.documentClasses[documentType] = documentClass;
+                key: 'onRenderTemplate',
+                value: function onRenderTemplate() {
+                    this.activateFirstSection();
                 }
             }, {
-                key: 'attachDocumentsClasses',
-                value: function attachDocumentsClasses() {
+                key: 'onRender',
+                value: function onRender() {
                     var _this2 = this;
 
-                    this.elements.$documents.each(function (index, document) {
-                        return _this2.attachDocumentClass(jQuery(document));
+                    var name = this.getOption('name');
+
+                    var $groupWrapper = void 0;
+
+                    this.children.each(function (child) {
+                        var type = child.model.get('type');
+
+                        if ('heading' !== type) {
+                            if ($groupWrapper) {
+                                $groupWrapper.append(child.$el);
+                            }
+
+                            return;
+                        }
+
+                        var groupName = child.model.get('name').replace('_heading', '');
+
+                        $groupWrapper = jQuery('<div>', {
+                            id: 'yjzan-popup__' + name + '-controls-group--' + groupName,
+                            class: 'yjzan-popup__display-settings_controls_group'
+                        });
+
+                        var $imageWrapper = jQuery('<div>', { class: 'yjzan-popup__display-settings_controls_group__icon' }),
+                            $image = jQuery('<img>', { src: yjzanPro.config.urls.modules + ('popup/assets/images/' + name + '/' + groupName + '.svg') });
+
+                        $imageWrapper.html($image);
+
+                        $groupWrapper.html($imageWrapper);
+
+                        child.$el.before($groupWrapper);
+
+                        $groupWrapper.append(child.$el);
+
+                        _this2.toggleGroup(groupName, $groupWrapper);
                     });
                 }
             }, {
-                key: 'attachDocumentClass',
-                value: function attachDocumentClass($document) {
-                    var documentData = $document.data(),
-                        documentID = documentData.yjzanId,
-                        documentType = documentData.yjzanType,
-                        DocumentClass = this.documentClasses[documentType] || this.documentClasses.base;
+                key: 'onModelChange',
+                value: function onModelChange() {
+                    var changedControlName = Object.keys(this.model.changed)[0],
+                        changedControlView = this.getControlViewByName(changedControlName);
 
-                    this.documents[documentID] = new DocumentClass({
-                        $element: $document,
-                        id: documentID
-                    });
+                    if ('switcher' !== changedControlView.model.get('type')) {
+                        return;
+                    }
+
+                    this.toggleGroup(changedControlName, changedControlView.$el.parent());
                 }
             }]);
 
             return _class;
-        }(yjzanModules.ViewModule);
+        }(yjzanModules.editor.views.ControlsStack);
 
         exports.default = _class;
 
         /***/ }),
-
-    /***/ 183:
+    /* 14 */
     /***/ (function(module, exports, __webpack_require__) {
 
         "use strict";
 
 
-        module.exports = function ($) {
-            var self = this;
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            onYjzanPreviewLoaded: function onYjzanPreviewLoaded() {
+                yjzan.addControlView('Query', __webpack_require__(15));
+            }
+        });
 
-            // element-type.skin-type
-            var handlers = {
-                // Elements
-                section: __webpack_require__(184),
+        /***/ }),
+    /* 15 */
+    /***/ (function(module, exports, __webpack_require__) {
 
-                // Widgets
-                'accordion.default': __webpack_require__(185),
-                'alert.default': __webpack_require__(186),
-                'counter.default': __webpack_require__(187),
-                'progress.default': __webpack_require__(188),
-                'tabs.default': __webpack_require__(189),
-                'toggle.default': __webpack_require__(190),
-                'video.default': __webpack_require__(191),
-                'image-carousel.default': __webpack_require__(192),
-                'text-editor.default': __webpack_require__(193)
-            };
+        "use strict";
 
-            var handlersInstances = {};
 
-            var addGlobalHandlers = function addGlobalHandlers() {
-                yjzanFrontend.hooks.addAction('frontend/element_ready/global', __webpack_require__(194));
-            };
+        module.exports = yjzan.modules.controls.Select2.extend({
 
-            var addElementsHandlers = function addElementsHandlers() {
-                $.each(handlers, function (elementName, funcCallback) {
-                    yjzanFrontend.hooks.addAction('frontend/element_ready/' + elementName, funcCallback);
+            cache: null,
+
+            isTitlesReceived: false,
+
+            getSelect2Placeholder: function getSelect2Placeholder() {
+                return {
+                    id: '',
+                    text: yjzanPro.translate('all')
+                };
+            },
+
+            getSelect2DefaultOptions: function getSelect2DefaultOptions() {
+                var self = this;
+
+                return jQuery.extend(yjzan.modules.controls.Select2.prototype.getSelect2DefaultOptions.apply(this, arguments), {
+                    ajax: {
+                        transport: function transport(params, success, failure) {
+                            var data = {
+                                q: params.data.q,
+                                filter_type: self.model.get('filter_type'),
+                                object_type: self.model.get('object_type'),
+                                include_type: self.model.get('include_type'),
+                                query: self.model.get('query')
+                            };
+
+                            return yjzanPro.ajax.addRequest('panel_posts_control_filter_autocomplete', {
+                                data: data,
+                                success: success,
+                                error: failure
+                            });
+                        },
+                        data: function data(params) {
+                            return {
+                                q: params.term,
+                                page: params.page
+                            };
+                        },
+                        cache: true
+                    },
+                    escapeMarkup: function escapeMarkup(markup) {
+                        return markup;
+                    },
+                    minimumInputLength: 1
                 });
-            };
+            },
 
-            var init = function init() {
-                self.initHandlers();
-            };
+            getValueTitles: function getValueTitles() {
+                var self = this,
+                    ids = this.getControlValue(),
+                    filterType = this.model.get('filter_type');
 
-            this.initHandlers = function () {
-                addGlobalHandlers();
-
-                addElementsHandlers();
-            };
-
-            this.addHandler = function (HandlerClass, options) {
-                var elementID = options.$element.data('model-cid');
-
-                var handlerID = void 0;
-
-                // If element is in edit mode
-                if (elementID) {
-                    handlerID = HandlerClass.prototype.getConstructorID();
-
-                    if (!handlersInstances[elementID]) {
-                        handlersInstances[elementID] = {};
-                    }
-
-                    var oldHandler = handlersInstances[elementID][handlerID];
-
-                    if (oldHandler) {
-                        oldHandler.onDestroy();
-                    }
-                }
-
-                var newHandler = new HandlerClass(options);
-
-                if (elementID) {
-                    handlersInstances[elementID][handlerID] = newHandler;
-                }
-            };
-
-            this.getHandlers = function (handlerName) {
-                if (handlerName) {
-                    return handlers[handlerName];
-                }
-
-                return handlers;
-            };
-
-            this.runReadyTrigger = function (scope) {
-                // Initializing the `$scope` as frontend jQuery instance
-                var $scope = jQuery(scope),
-                    elementType = $scope.attr('data-element_type');
-
-                if (!elementType) {
+                if (!ids || !filterType) {
                     return;
                 }
 
-                yjzanFrontend.hooks.doAction('frontend/element_ready/global', $scope, $);
-
-                yjzanFrontend.hooks.doAction('frontend/element_ready/' + elementType, $scope, $);
-
-                if ('widget' === elementType) {
-                    yjzanFrontend.hooks.doAction('frontend/element_ready/' + $scope.attr('data-widget_type'), $scope, $);
+                if (!_.isArray(ids)) {
+                    ids = [ids];
                 }
+
+                yjzanCommon.ajax.loadObjects({
+                    action: 'query_control_value_titles',
+                    ids: ids,
+                    data: {
+                        filter_type: filterType,
+                        object_type: self.model.get('object_type'),
+                        include_type: self.model.get('include_type'),
+                        unique_id: '' + self.cid + filterType
+                    },
+                    before: function before() {
+                        self.addControlSpinner();
+                    },
+                    success: function success(data) {
+                        self.isTitlesReceived = true;
+
+                        self.model.set('options', data);
+
+                        self.render();
+                    }
+                });
+            },
+
+            addControlSpinner: function addControlSpinner() {
+                this.ui.select.prop('disabled', true);
+                this.$el.find('.yjzan-control-title').after('<span class="yjzan-control-spinner">&nbsp;<i class="fa fa-spinner fa-spin"></i>&nbsp;</span>');
+            },
+
+            onReady: function onReady() {
+                // Safari takes it's time to get the original select width
+                setTimeout(yjzan.modules.controls.Select2.prototype.onReady.bind(this));
+
+                if (!this.isTitlesReceived) {
+                    this.getValueTitles();
+                }
+            }
+        });
+
+        /***/ }),
+    /* 16 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            onYjzanInit: function onYjzanInit() {
+                var ReplyToField = __webpack_require__(17),
+                    Recaptcha = __webpack_require__(18),
+                    Shortcode = __webpack_require__(19),
+                    MailerLite = __webpack_require__(20),
+                    Mailchimp = __webpack_require__(21),
+                    Drip = __webpack_require__(22),
+                    ActiveCampaign = __webpack_require__(23),
+                    GetResponse = __webpack_require__(24),
+                    ConvertKit = __webpack_require__(25);
+
+                this.replyToField = new ReplyToField();
+                this.mailchimp = new Mailchimp('form');
+                this.shortcode = new Shortcode('form');
+                this.recaptcha = new Recaptcha('form');
+                this.drip = new Drip('form');
+                this.activecampaign = new ActiveCampaign('form');
+                this.getresponse = new GetResponse('form');
+                this.convertkit = new ConvertKit('form');
+                this.mailerlite = new MailerLite('form');
+
+                // Form fields
+                var TimeField = __webpack_require__(26),
+                    DateField = __webpack_require__(27),
+                    AcceptanceField = __webpack_require__(28),
+                    UploadField = __webpack_require__(29),
+                    TelField = __webpack_require__(30);
+
+                this.Fields = {
+                    time: new TimeField('form'),
+                    date: new DateField('form'),
+                    tel: new TelField('form'),
+                    acceptance: new AcceptanceField('form'),
+                    upload: new UploadField('form')
+                };
+
+                yjzan.addControlView('Fields_map', __webpack_require__(31));
+            }
+        });
+
+        /***/ }),
+    /* 17 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = function () {
+            var editor, editedModel, replyToControl;
+
+            var setReplyToControl = function setReplyToControl() {
+                replyToControl = editor.collection.findWhere({ name: 'email_reply_to' });
+            };
+
+            var getReplyToView = function getReplyToView() {
+                return editor.children.findByModelCid(replyToControl.cid);
+            };
+
+            var refreshReplyToElement = function refreshReplyToElement() {
+                var replyToView = getReplyToView();
+
+                if (replyToView) {
+                    replyToView.render();
+                }
+            };
+
+            var updateReplyToOptions = function updateReplyToOptions() {
+                var settingsModel = editedModel.get('settings'),
+                    emailModels = settingsModel.get('form_fields').where({ field_type: 'email' }),
+                    emailFields;
+
+                emailModels = _.reject(emailModels, { field_label: '' });
+
+                emailFields = _.map(emailModels, function (model) {
+                    return {
+                        id: model.get('custom_id'),
+                        label: yjzanPro.translate('x_field', [model.get('field_label')])
+                    };
+                });
+
+                replyToControl.set('options', { '': replyToControl.get('options')[''] });
+
+                _.each(emailFields, function (emailField) {
+                    replyToControl.get('options')[emailField.id] = emailField.label;
+                });
+
+                refreshReplyToElement();
+            };
+
+            var updateDefaultReplyTo = function updateDefaultReplyTo(settingsModel) {
+                replyToControl.get('options')[''] = settingsModel.get('email_from');
+
+                refreshReplyToElement();
+            };
+
+            var onFormFieldsChange = function onFormFieldsChange(changedModel) {
+                // If it's repeater field
+                if (changedModel.get('custom_id')) {
+                    if ('email' === changedModel.get('field_type')) {
+                        updateReplyToOptions();
+                    }
+                }
+
+                if (changedModel.changed.email_from) {
+                    updateDefaultReplyTo(changedModel);
+                }
+            };
+
+            var onPanelShow = function onPanelShow(panel, model) {
+                editor = panel.getCurrentPageView();
+
+                editedModel = model;
+
+                setReplyToControl();
+
+                var settingsModel = editedModel.get('settings');
+
+                settingsModel.on('change', onFormFieldsChange);
+
+                updateDefaultReplyTo(settingsModel);
+
+                updateReplyToOptions();
+            };
+
+            var init = function init() {
+                yjzan.hooks.addAction('panel/open_editor/widget/form', onPanelShow);
             };
 
             init();
         };
 
         /***/ }),
-
-    /***/ 184:
+    /* 18 */
     /***/ (function(module, exports, __webpack_require__) {
 
         "use strict";
 
 
-        var BackgroundVideo = yjzanModules.frontend.handlers.Base.extend({
-            player: null,
+        module.exports = yjzanModules.editor.utils.Module.extend({
 
-            isYTVideo: null,
-
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    selectors: {
-                        backgroundVideoContainer: '.yjzan-background-video-container',
-                        backgroundVideoEmbed: '.yjzan-background-video-embed',
-                        backgroundVideoHosted: '.yjzan-background-video-hosted'
-                    }
-                };
+            renderField: function renderField(inputField, item) {
+                    inputField +='<div class="yjz-form-recaptcha-wrap">';
+                    inputField +='<input type="text" maxlength="4" class="yjz-recaptcha-text" required="required" name ="form_fields[recaptcha]" placeholder="请输入验证码">';
+                    inputField +=' <img src="/yjz_check_code.php" class="yjz-recaptcha-img" onclick="javascript:this.src=this.src">';
+                    inputField +='</div>';
+                console.log(inputField);
+                return inputField;
             },
 
-            getDefaultElements: function getDefaultElements() {
-                var selectors = this.getSettings('selectors'),
-                    elements = {
-                        $backgroundVideoContainer: this.$element.find(selectors.backgroundVideoContainer)
+            filterItem: function filterItem(item) {
+                if ('recaptcha' === item.field_type) {
+                    item.field_label = false;
+                }
+
+                return item;
+            },
+
+            onInit: function onInit() {
+                yjzan.hooks.addFilter('yjzan_pro/forms/content_template/item', this.filterItem);
+                yjzan.hooks.addFilter('yjzan_pro/forms/content_template/field/recaptcha', this.renderField, 10, 2);
+            }
+        });
+
+        /***/ }),
+    /* 19 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var ElementEditorModule = __webpack_require__(4);
+
+        module.exports = ElementEditorModule.extend({
+            lastRemovedModelId: false,
+            collectionEventsAttached: false,
+
+            formFieldEvents: {
+                ADD: 'add',
+                SORT: 'sort',
+                DUPLICATE: 'duplicate',
+                CHANGE: 'change'
+            },
+
+            getExistId: function getExistId(id) {
+                var exist = this.getEditorControlView('form_fields').collection.filter(function (model) {
+                    return id === model.get('custom_id');
+                });
+
+                return exist.length > 1;
+            },
+            getFormFieldsView: function getFormFieldsView() {
+                return this.getEditorControlView('form_fields');
+            },
+            onFieldUpdate: function onFieldUpdate(collection, update) {
+                if (!update.add) {
+                    return;
+                }
+                var event = this.formFieldEvents.ADD;
+                var addedModel = update.changes.added[0];
+                if (update.at) {
+                    if (this.lastRemovedModelId && addedModel.attributes.custom_id === this.lastRemovedModelId) {
+                        event = this.formFieldEvents.SORT;
+                    } else {
+                        event = this.formFieldEvents.DUPLICATE;
+                    }
+                    this.lastRemovedModelId = false;
+                }
+                this.updateIdAndShortcode(addedModel, event);
+            },
+            onFieldChanged: function onFieldChanged(model) {
+                if (!_.isUndefined(model.changed.custom_id)) {
+                    this.updateIdAndShortcode(model, this.formFieldEvents.CHANGE);
+                }
+            },
+            onFieldRemoved: function onFieldRemoved(model) {
+                this.lastRemovedModelId = model.attributes.custom_id;
+                this.getFormFieldsView().children.each(this.updateShortcode);
+            },
+            updateIdAndShortcode: function updateIdAndShortcode(model, event) {
+                var _this = this;
+
+                var view = this.getFormFieldsView().children.findByModel(model);
+
+                _.defer(function () {
+                    _this.updateId(view, event);
+                    _this.updateShortcode(view);
+                });
+            },
+            getFieldId: function getFieldId(model, event) {
+                if (event === this.formFieldEvents.ADD || event === this.formFieldEvents.DUPLICATE) {
+                    return model.get('_id');
+                }
+                var customId = model.get('custom_id');
+                return customId ? customId : model.get('_id');
+            },
+            updateId: function updateId(view, event) {
+                var id = this.getFieldId(view.model, event),
+                    sanitizedId = id.replace(/[^\w]/, '_'),
+                    fieldIndex = 1,
+                    isNew = event === this.formFieldEvents.ADD || event === this.formFieldEvents.DUPLICATE;
+                var IdView = view.children.filter(function (childrenView) {
+                    return 'custom_id' === childrenView.model.get('name');
+                });
+
+                while (sanitizedId !== id || this.getExistId(id) || isNew) {
+                    if (sanitizedId !== id) {
+                        id = sanitizedId;
+                    } else if (isNew || this.getExistId(id)) {
+                        id = 'field_' + fieldIndex;
+                        sanitizedId = id;
+                    }
+
+                    view.model.attributes.custom_id = id;
+                    IdView[0].render();
+                    IdView[0].$el.find('input').focus();
+                    fieldIndex++;
+                    isNew = false;
+                }
+            },
+            updateShortcode: function updateShortcode(view) {
+                var template = _.template('[field id="<%= id %>"]')({
+                    title: view.model.get('field_label'),
+                    id: view.model.get('custom_id')
+                });
+
+                view.$el.find('.yjzan-form-field-shortcode').focus(function () {
+                    this.select();
+                }).val(template);
+            },
+            onSectionActive: function onSectionActive() {
+                var controlView = this.getEditorControlView('form_fields');
+
+                controlView.children.each(this.updateShortcode);
+
+                if (!controlView.collection.shortcodeEventsAttached) {
+                    controlView.collection.on('change', this.onFieldChanged).on('update', this.onFieldUpdate).on('remove', this.onFieldRemoved);
+                    controlView.collection.shortcodeEventsAttached = true;
+                }
+            },
+            onInit: function onInit() {
+                this.addSectionListener('section_form_fields', this.onSectionActive);
+            }
+        });
+
+        /***/ }),
+    /* 20 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var BaseIntegrationModule = __webpack_require__(1);
+
+        module.exports = BaseIntegrationModule.extend({
+            fields: {},
+
+            getName: function getName() {
+                return 'mailerlite';
+            },
+
+            onElementChange: function onElementChange(setting) {
+                switch (setting) {
+                    case 'mailerlite_api_key_source':
+                    case 'mailerlite_custom_api_key':
+                        this.onMailerliteApiKeyUpdate();
+                        break;
+                    case 'mailerlite_group':
+                        this.updateFieldsMapping();
+                        break;
+                }
+            },
+
+            onMailerliteApiKeyUpdate: function onMailerliteApiKeyUpdate() {
+                var self = this,
+                    controlView = self.getEditorControlView('mailerlite_custom_api_key'),
+                    GlobalApiKeycontrolView = self.getEditorControlView('mailerlite_api_key_source');
+
+                if ('default' !== GlobalApiKeycontrolView.getControlValue() && '' === controlView.getControlValue()) {
+                    self.updateOptions('mailerlite_group', []);
+                    self.getEditorControlView('mailerlite_group').setValue('');
+                    return;
+                }
+
+                self.addControlSpinner('mailerlite_group');
+
+                self.getMailerliteCache('groups', 'groups', GlobalApiKeycontrolView.getControlValue()).done(function (data) {
+                    self.updateOptions('mailerlite_group', data.groups);
+                    self.fields = data.fields;
+                });
+            },
+
+            updateFieldsMapping: function updateFieldsMapping() {
+                var controlView = this.getEditorControlView('mailerlite_group');
+
+                if (!controlView.getControlValue()) {
+                    return;
+                }
+
+                var remoteFields = [{
+                    remote_label: yjzan.translate('Email'),
+                    remote_type: 'email',
+                    remote_id: 'email',
+                    remote_required: true
+                }, {
+                    remote_label: yjzan.translate('Name'),
+                    remote_type: 'text',
+                    remote_id: 'name',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Last Name'),
+                    remote_type: 'text',
+                    remote_id: 'last_name',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Company'),
+                    remote_type: 'text',
+                    remote_id: 'company',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Phone'),
+                    remote_type: 'text',
+                    remote_id: 'phone',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Country'),
+                    remote_type: 'text',
+                    remote_id: 'country',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('State'),
+                    remote_type: 'text',
+                    remote_id: 'state',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('City'),
+                    remote_type: 'text',
+                    remote_id: 'city',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Zip'),
+                    remote_type: 'text',
+                    remote_id: 'zip',
+                    remote_required: false
+                }];
+
+                for (var field in this.fields) {
+                    if (this.fields.hasOwnProperty(field)) {
+                        remoteFields.push(this.fields[field]);
+                    }
+                }
+
+                this.getEditorControlView('mailerlite_fields_map').updateMap(remoteFields);
+            },
+
+            getMailerliteCache: function getMailerliteCache(type, action, cacheKey, requestArgs) {
+                if (_.has(this.cache[type], cacheKey)) {
+                    var data = {};
+                    data[type] = this.cache[type][cacheKey];
+                    return jQuery.Deferred().resolve(data);
+                }
+
+                requestArgs = _.extend({}, requestArgs, {
+                    service: 'mailerlite',
+                    mailerlite_action: action,
+                    custom_api_key: this.getEditorControlView('mailerlite_custom_api_key').getControlValue(),
+                    api_key: this.getEditorControlView('mailerlite_api_key_source').getControlValue()
+                });
+
+                return this.fetchCache(type, cacheKey, requestArgs);
+            },
+
+            onSectionActive: function onSectionActive() {
+                BaseIntegrationModule.prototype.onSectionActive.apply(this, arguments);
+
+                this.onMailerliteApiKeyUpdate();
+            }
+
+        });
+
+        /***/ }),
+    /* 21 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var BaseIntegrationModule = __webpack_require__(1);
+
+        module.exports = BaseIntegrationModule.extend({
+            getName: function getName() {
+                return 'mailchimp';
+            },
+
+            onElementChange: function onElementChange(setting) {
+                switch (setting) {
+                    case 'mailchimp_api_key_source':
+                    case 'mailchimp_api_key':
+                        this.onApiUpdate();
+                        break;
+                    case 'mailchimp_list':
+                        this.onMailchimpListUpdate();
+                        break;
+                }
+            },
+
+            onApiUpdate: function onApiUpdate() {
+                var self = this,
+                    controlView = self.getEditorControlView('mailchimp_api_key'),
+                    GlobalApiKeycontrolView = self.getEditorControlView('mailchimp_api_key_source');
+
+                if ('default' !== GlobalApiKeycontrolView.getControlValue() && '' === controlView.getControlValue()) {
+                    self.updateOptions('mailchimp_list', []);
+                    self.getEditorControlView('mailchimp_list').setValue('');
+                    return;
+                }
+
+                self.addControlSpinner('mailchimp_list');
+
+                self.getMailchimpCache('lists', 'lists', GlobalApiKeycontrolView.getControlValue()).done(function (data) {
+                    self.updateOptions('mailchimp_list', data.lists);
+                    self.updatMailchimpList();
+                });
+            },
+
+            onMailchimpListUpdate: function onMailchimpListUpdate() {
+                this.updateOptions('mailchimp_groups', []);
+                this.getEditorControlView('mailchimp_groups').setValue('');
+                this.updatMailchimpList();
+            },
+
+            updatMailchimpList: function updatMailchimpList() {
+                var self = this,
+                    controlView = self.getEditorControlView('mailchimp_list');
+
+                if (!controlView.getControlValue()) {
+                    return;
+                }
+
+                self.addControlSpinner('mailchimp_groups');
+
+                self.getMailchimpCache('list_details', 'list_details', controlView.getControlValue(), {
+                    mailchimp_list: controlView.getControlValue()
+                }).done(function (data) {
+                    self.updateOptions('mailchimp_groups', data.list_details.groups);
+                    self.getEditorControlView('mailchimp_fields_map').updateMap(data.list_details.fields);
+                });
+            },
+
+            getMailchimpCache: function getMailchimpCache(type, action, cacheKey, requestArgs) {
+                if (_.has(this.cache[type], cacheKey)) {
+                    var data = {};
+                    data[type] = this.cache[type][cacheKey];
+                    return jQuery.Deferred().resolve(data);
+                }
+
+                requestArgs = _.extend({}, requestArgs, {
+                    service: 'mailchimp',
+                    mailchimp_action: action,
+                    api_key: this.getEditorControlView('mailchimp_api_key').getControlValue(),
+                    use_global_api_key: this.getEditorControlView('mailchimp_api_key_source').getControlValue()
+                });
+
+                return this.fetchCache(type, cacheKey, requestArgs);
+            },
+
+            onSectionActive: function onSectionActive() {
+                BaseIntegrationModule.prototype.onSectionActive.apply(this, arguments);
+
+                this.onApiUpdate();
+            }
+        });
+
+        /***/ }),
+    /* 22 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var BaseIntegrationModule = __webpack_require__(1);
+
+        module.exports = BaseIntegrationModule.extend({
+            getName: function getName() {
+                return 'drip';
+            },
+
+            onElementChange: function onElementChange(setting) {
+                switch (setting) {
+                    case 'drip_api_token_source':
+                    case 'drip_custom_api_token':
+                        this.onApiUpdate();
+                        break;
+                    case 'drip_account':
+                        this.onDripAccountsUpdate();
+                        break;
+                }
+            },
+
+            onApiUpdate: function onApiUpdate() {
+                var self = this,
+                    controlView = self.getEditorControlView('drip_api_token_source'),
+                    customControlView = self.getEditorControlView('drip_custom_api_token');
+
+                if ('default' !== controlView.getControlValue() && '' === customControlView.getControlValue()) {
+                    self.updateOptions('drip_account', []);
+                    self.getEditorControlView('drip_account').setValue('');
+                    return;
+                }
+
+                self.addControlSpinner('drip_account');
+
+                self.getDripCache('accounts', 'accounts', controlView.getControlValue()).done(function (data) {
+                    self.updateOptions('drip_account', data.accounts);
+                });
+            },
+
+            onDripAccountsUpdate: function onDripAccountsUpdate() {
+                this.updateFieldsMapping();
+            },
+
+            updateFieldsMapping: function updateFieldsMapping() {
+                var controlView = this.getEditorControlView('drip_account');
+
+                if (!controlView.getControlValue()) {
+                    return;
+                }
+
+                var remoteFields = {
+                    remote_label: yjzan.translate('Email'),
+                    remote_type: 'email',
+                    remote_id: 'email',
+                    remote_required: true
+                };
+
+                this.getEditorControlView('drip_fields_map').updateMap([remoteFields]);
+            },
+
+            getDripCache: function getDripCache(type, action, cacheKey, requestArgs) {
+                if (_.has(this.cache[type], cacheKey)) {
+                    var data = {};
+                    data[type] = this.cache[type][cacheKey];
+                    return jQuery.Deferred().resolve(data);
+                }
+
+                requestArgs = _.extend({}, requestArgs, {
+                    service: 'drip',
+                    drip_action: action,
+                    api_token: this.getEditorControlView('drip_api_token_source').getControlValue(),
+                    custom_api_token: this.getEditorControlView('drip_custom_api_token').getControlValue()
+                });
+
+                return this.fetchCache(type, cacheKey, requestArgs);
+            }
+        });
+
+        /***/ }),
+    /* 23 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var BaseIntegrationModule = __webpack_require__(1);
+
+        module.exports = BaseIntegrationModule.extend({
+            fields: {},
+
+            getName: function getName() {
+                return 'activecampaign';
+            },
+
+            onElementChange: function onElementChange(setting) {
+                switch (setting) {
+                    case 'activecampaign_api_credentials_source':
+                    case 'activecampaign_api_key':
+                    case 'activecampaign_api_url':
+                        this.onApiUpdate();
+                        break;
+                    case 'activecampaign_list':
+                        this.onListUpdate();
+                        break;
+                }
+            },
+
+            onApiUpdate: function onApiUpdate() {
+                var self = this,
+                    apikeyControlView = self.getEditorControlView('activecampaign_api_key'),
+                    apiUrlControlView = self.getEditorControlView('activecampaign_api_url'),
+                    apiCredControlView = self.getEditorControlView('activecampaign_api_credentials_source');
+
+                if ('default' !== apiCredControlView.getControlValue() && ('' === apikeyControlView.getControlValue() || '' === apiUrlControlView.getControlValue())) {
+                    self.updateOptions('activecampaign_list', []);
+                    self.getEditorControlView('activecampaign_list').setValue('');
+                    return;
+                }
+
+                self.addControlSpinner('activecampaign_list');
+
+                self.getActiveCampaignCache('lists', 'activecampaign_list', apiCredControlView.getControlValue()).done(function (data) {
+                    self.updateOptions('activecampaign_list', data.lists);
+                    self.fields = data.fields;
+                });
+            },
+
+            onListUpdate: function onListUpdate() {
+                this.updateFieldsMapping();
+            },
+
+            updateFieldsMapping: function updateFieldsMapping() {
+                var controlView = this.getEditorControlView('activecampaign_list');
+
+                if (!controlView.getControlValue()) {
+                    return;
+                }
+
+                var remoteFields = [{
+                    remote_label: yjzan.translate('Email'),
+                    remote_type: 'email',
+                    remote_id: 'email',
+                    remote_required: true
+                }, {
+                    remote_label: yjzan.translate('First Name'),
+                    remote_type: 'text',
+                    remote_id: 'first_name',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Last Name'),
+                    remote_type: 'text',
+                    remote_id: 'last_name',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Phone'),
+                    remote_type: 'text',
+                    remote_id: 'phone',
+                    remote_required: false
+                }, {
+                    remote_label: yjzan.translate('Organization name'),
+                    remote_type: 'text',
+                    remote_id: 'orgname',
+                    remote_required: false
+                }];
+
+                for (var field in this.fields) {
+                    if (this.fields.hasOwnProperty(field)) {
+                        remoteFields.push(this.fields[field]);
+                    }
+                }
+
+                this.getEditorControlView('activecampaign_fields_map').updateMap(remoteFields);
+            },
+
+            getActiveCampaignCache: function getActiveCampaignCache(type, action, cacheKey, requestArgs) {
+                if (_.has(this.cache[type], cacheKey)) {
+                    var data = {};
+                    data[type] = this.cache[type][cacheKey];
+                    return jQuery.Deferred().resolve(data);
+                }
+
+                requestArgs = _.extend({}, requestArgs, {
+                    service: 'activecampaign',
+                    activecampaign_action: action,
+                    api_key: this.getEditorControlView('activecampaign_api_key').getControlValue(),
+                    api_url: this.getEditorControlView('activecampaign_api_url').getControlValue(),
+                    api_cred: this.getEditorControlView('activecampaign_api_credentials_source').getControlValue()
+                });
+
+                return this.fetchCache(type, cacheKey, requestArgs);
+            }
+        });
+
+        /***/ }),
+    /* 24 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var BaseIntegrationModule = __webpack_require__(1);
+
+        module.exports = BaseIntegrationModule.extend({
+            getName: function getName() {
+                return 'getresponse';
+            },
+
+            onElementChange: function onElementChange(setting) {
+                switch (setting) {
+                    case 'getresponse_custom_api_key':
+                    case 'getresponse_api_key_source':
+                        this.onApiUpdate();
+                        break;
+                    case 'getresponse_list':
+                        this.onGetResonseListUpdate();
+                        break;
+                }
+            },
+
+            onApiUpdate: function onApiUpdate() {
+                var self = this,
+                    controlView = self.getEditorControlView('getresponse_api_key_source'),
+                    customControlView = self.getEditorControlView('getresponse_custom_api_key');
+
+                if ('default' !== controlView.getControlValue() && '' === customControlView.getControlValue()) {
+                    self.updateOptions('getresponse_list', []);
+                    self.getEditorControlView('getresponse_list').setValue('');
+                    return;
+                }
+
+                self.addControlSpinner('getresponse_list');
+
+                self.getCache('lists', 'lists', controlView.getControlValue()).done(function (data) {
+                    self.updateOptions('getresponse_list', data.lists);
+                });
+            },
+
+            onGetResonseListUpdate: function onGetResonseListUpdate() {
+                this.updatGetResonseList();
+            },
+
+            updatGetResonseList: function updatGetResonseList() {
+                var self = this,
+                    controlView = self.getEditorControlView('getresponse_list');
+
+                if (!controlView.getControlValue()) {
+                    return;
+                }
+
+                self.addControlSpinner('getresponse_fields_map');
+
+                self.getCache('fields', 'get_fields', controlView.getControlValue(), {
+                    getresponse_list: controlView.getControlValue()
+                }).done(function (data) {
+                    self.getEditorControlView('getresponse_fields_map').updateMap(data.fields);
+                });
+            },
+
+            getCache: function getCache(type, action, cacheKey, requestArgs) {
+                if (_.has(this.cache[type], cacheKey)) {
+                    var data = {};
+                    data[type] = this.cache[type][cacheKey];
+                    return jQuery.Deferred().resolve(data);
+                }
+
+                requestArgs = _.extend({}, requestArgs, {
+                    service: 'getresponse',
+                    getresponse_action: action,
+                    api_key: this.getEditorControlView('getresponse_api_key_source').getControlValue(),
+                    custom_api_key: this.getEditorControlView('getresponse_custom_api_key').getControlValue()
+                });
+
+                return this.fetchCache(type, cacheKey, requestArgs);
+            },
+
+            onSectionActive: function onSectionActive() {
+                BaseIntegrationModule.prototype.onSectionActive.apply(this, arguments);
+
+                this.updatGetResonseList();
+            }
+        });
+
+        /***/ }),
+    /* 25 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var BaseIntegrationModule = __webpack_require__(1);
+
+        module.exports = BaseIntegrationModule.extend({
+
+            getName: function getName() {
+                return 'convertkit';
+            },
+
+            onElementChange: function onElementChange(setting) {
+                switch (setting) {
+                    case 'convertkit_api_key_source':
+                    case 'convertkit_custom_api_key':
+                        this.onApiUpdate();
+                        break;
+                    case 'convertkit_form':
+                        this.onListUpdate();
+                        break;
+                }
+            },
+
+            onApiUpdate: function onApiUpdate() {
+                var self = this,
+                    apiKeyControlView = self.getEditorControlView('convertkit_api_key_source'),
+                    customApikeyControlView = self.getEditorControlView('convertkit_custom_api_key');
+
+                if ('default' !== apiKeyControlView.getControlValue() && '' === customApikeyControlView.getControlValue()) {
+                    self.updateOptions('convertkit_form', []);
+                    self.getEditorControlView('convertkit_form').setValue('');
+                    return;
+                }
+
+                self.addControlSpinner('convertkit_form');
+
+                self.getConvertKitCache('data', 'convertkit_get_forms', apiKeyControlView.getControlValue()).done(function (data) {
+                    self.updateOptions('convertkit_form', data.data.forms);
+                    self.updateOptions('convertkit_tags', data.data.tags);
+                });
+            },
+
+            onListUpdate: function onListUpdate() {
+                this.updateFieldsMapping();
+            },
+
+            updateFieldsMapping: function updateFieldsMapping() {
+                var controlView = this.getEditorControlView('convertkit_form');
+
+                if (!controlView.getControlValue()) {
+                    return;
+                }
+
+                var remoteFields = [{
+                    remote_label: yjzan.translate('Email'),
+                    remote_type: 'email',
+                    remote_id: 'email',
+                    remote_required: true
+                }, {
+                    remote_label: yjzan.translate('First Name'),
+                    remote_type: 'text',
+                    remote_id: 'first_name',
+                    remote_required: false
+                }];
+
+                this.getEditorControlView('convertkit_fields_map').updateMap(remoteFields);
+            },
+
+            getConvertKitCache: function getConvertKitCache(type, action, cacheKey, requestArgs) {
+                if (_.has(this.cache[type], cacheKey)) {
+                    var data = {};
+                    data[type] = this.cache[type][cacheKey];
+                    return jQuery.Deferred().resolve(data);
+                }
+
+                requestArgs = _.extend({}, requestArgs, {
+                    service: 'convertkit',
+                    convertkit_action: action,
+                    api_key: this.getEditorControlView('convertkit_api_key_source').getControlValue(),
+                    custom_api_key: this.getEditorControlView('convertkit_custom_api_key').getControlValue()
+                });
+
+                return this.fetchCache(type, cacheKey, requestArgs);
+            }
+        });
+
+        /***/ }),
+    /* 26 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+
+            renderField: function renderField(inputField, item, i, settings) {
+                var itemClasses = _.escape(item.css_classes),
+                    required = '',
+                    placeholder = '';
+
+                if (item.required) {
+                    required = 'required';
+                }
+
+                if (item.placeholder) {
+                    placeholder = ' placeholder="' + item.placeholder + '"';
+                }
+
+                if ('yes' === item.use_native_time) {
+                    itemClasses += ' yjzan-use-native';
+                }
+
+                return '<input size="1" type="time"' + placeholder + ' class="yjzan-field-textual yjzan-time-field yjzan-field yjzan-size-' + settings.input_size + ' ' + itemClasses + '" name="form_field_' + i + '" id="form_field_' + i + '" ' + required + ' >';
+            },
+
+            onInit: function onInit() {
+                yjzan.hooks.addFilter('yjzan_pro/forms/content_template/field/time', this.renderField, 10, 4);
+            }
+        });
+
+        /***/ }),
+    /* 27 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+
+            renderField: function renderField(inputField, item, i, settings) {
+                var itemClasses = _.escape(item.css_classes),
+                    required = '',
+                    min = '',
+                    max = '',
+                    placeholder = '';
+
+                if (item.required) {
+                    required = 'required';
+                }
+
+                if (item.min_date) {
+                    min = ' min="' + item.min_date + '"';
+                }
+
+                if (item.max_date) {
+                    max = ' max="' + item.max_date + '"';
+                }
+
+                if (item.placeholder) {
+                    placeholder = ' placeholder="' + item.placeholder + '"';
+                }
+
+                if ('yes' === item.use_native_date) {
+                    itemClasses += ' yjzan-use-native';
+                }
+
+                return '<input size="1"' + min + max + placeholder + ' pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}" type="date" class="yjzan-field-textual yjzan-date-field yjzan-field yjzan-size-' + settings.input_size + ' ' + itemClasses + '" name="form_field_' + i + '" id="form_field_' + i + '" ' + required + ' >';
+            },
+
+            onInit: function onInit() {
+                yjzan.hooks.addFilter('yjzan_pro/forms/content_template/field/date', this.renderField, 10, 4);
+            }
+        });
+
+        /***/ }),
+    /* 28 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+
+            renderField: function renderField(inputField, item, i, settings) {
+                var itemClasses = _.escape(item.css_classes),
+                    required = '',
+                    label = '',
+                    checked = '';
+
+                if (item.required) {
+                    required = 'required';
+                }
+
+                if (item.acceptance_text) {
+                    label = '<label for="form_field_' + i + '">' + item.acceptance_text + '</label>';
+                }
+
+                if (item.checked_by_default) {
+                    checked = ' checked="checked"';
+                }
+
+                return '<div class="yjzan-field-subgroup">' + '<span class="yjzan-field-option">' + '<input size="1" type="checkbox"' + checked + ' class="yjzan-acceptance-field yjzan-field yjzan-size-' + settings.input_size + ' ' + itemClasses + '" name="form_field_' + i + '" id="form_field_' + i + '" ' + required + ' > ' + label + '</span></div>';
+            },
+
+            onInit: function onInit() {
+                yjzan.hooks.addFilter('yjzan_pro/forms/content_template/field/acceptance', this.renderField, 10, 4);
+            }
+        });
+
+        /***/ }),
+    /* 29 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+
+            renderField: function renderField(inputField, item, i, settings) {
+                var itemClasses = _.escape(item.css_classes),
+                    required = '',
+                    multiple = '',
+                    fieldName = 'form_field_';
+
+                if (item.required) {
+                    required = 'required';
+                }
+                if (item.allow_multiple_upload) {
+                    multiple = ' multiple="multiple"';
+                    fieldName += '[]';
+                }
+
+                return '<input size="1"  type="file" class="yjzan-file-field yjzan-field yjzan-size-' + settings.input_size + ' ' + itemClasses + '" name="' + fieldName + '" id="form_field_' + i + '" ' + required + multiple + ' >';
+            },
+
+            onInit: function onInit() {
+                yjzan.hooks.addFilter('yjzan_pro/forms/content_template/field/upload', this.renderField, 10, 4);
+            }
+        });
+
+        /***/ }),
+    /* 30 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+
+            renderField: function renderField(inputField, item, i, settings) {
+                var itemClasses = _.escape(item.css_classes),
+                    required = '',
+                    placeholder = '';
+
+                if (item.required) {
+                    required = 'required';
+                }
+
+                if (item.placeholder) {
+                    placeholder = ' placeholder="' + item.placeholder + '"';
+                }
+
+                itemClasses = 'yjzan-field-textual ' + itemClasses;
+
+                return '<input size="1" type="' + item.field_type + '" class="yjzan-field-textual yjzan-field yjzan-size-' + settings.input_size + ' ' + itemClasses + '" name="form_field_' + i + '" id="form_field_' + i + '" ' + required + ' ' + placeholder + ' pattern="[0-9()-]" >';
+            },
+
+            onInit: function onInit() {
+                yjzan.hooks.addFilter('yjzan_pro/forms/content_template/field/tel', this.renderField, 10, 4);
+            }
+        });
+
+        /***/ }),
+    /* 31 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzan.modules.controls.Repeater.extend({
+            onBeforeRender: function onBeforeRender() {
+                this.$el.hide();
+            },
+
+            updateMap: function updateMap(fields) {
+                var self = this,
+                    savedMapObject = {};
+
+                self.collection.each(function (model) {
+                    savedMapObject[model.get('remote_id')] = model.get('local_id');
+                });
+
+                self.collection.reset();
+
+                _.each(fields, function (field) {
+                    var model = {
+                        remote_id: field.remote_id,
+                        remote_label: field.remote_label,
+                        remote_type: field.remote_type ? field.remote_type : '',
+                        remote_required: field.remote_required ? field.remote_required : false,
+                        local_id: savedMapObject[field.remote_id] ? savedMapObject[field.remote_id] : ''
                     };
 
-                elements.$backgroundVideoEmbed = elements.$backgroundVideoContainer.children(selectors.backgroundVideoEmbed);
+                    self.collection.add(model);
+                });
 
-                elements.$backgroundVideoHosted = elements.$backgroundVideoContainer.children(selectors.backgroundVideoHosted);
-
-                return elements;
+                self.render();
             },
 
-            calcVideosSize: function calcVideosSize() {
-                var containerWidth = this.elements.$backgroundVideoContainer.outerWidth(),
-                    containerHeight = this.elements.$backgroundVideoContainer.outerHeight(),
-                    aspectRatioSetting = '16:9',
-                    //TEMP
-                    aspectRatioArray = aspectRatioSetting.split(':'),
-                    aspectRatio = aspectRatioArray[0] / aspectRatioArray[1],
-                    ratioWidth = containerWidth / aspectRatio,
-                    ratioHeight = containerHeight * aspectRatio,
-                    isWidthFixed = containerWidth / containerHeight > aspectRatio;
+            onRender: function onRender() {
+                yjzan.modules.controls.Base.prototype.onRender.apply(this, arguments);
 
-                return {
-                    width: isWidthFixed ? containerWidth : ratioHeight,
-                    height: isWidthFixed ? ratioWidth : containerHeight
-                };
-            },
-
-            changeVideoSize: function changeVideoSize() {
-                var $video = this.isYTVideo ? jQuery(this.player.getIframe()) : this.elements.$backgroundVideoHosted,
-                    size = this.calcVideosSize();
-
-                $video.width(size.width).height(size.height);
-            },
-
-            startVideoLoop: function startVideoLoop() {
                 var self = this;
 
-                // If the section has been removed
-                if (!self.player.getIframe().contentWindow) {
-                    return;
-                }
-
-                var elementSettings = self.getElementSettings(),
-                    startPoint = elementSettings.background_video_start || 0,
-                    endPoint = elementSettings.background_video_end;
-
-                self.player.seekTo(startPoint);
-
-                if (endPoint) {
-                    var durationToEnd = endPoint - startPoint + 1;
-
-                    setTimeout(function () {
-                        self.startVideoLoop();
-                    }, durationToEnd * 1000);
-                }
-            },
-
-            prepareYTVideo: function prepareYTVideo(YT, videoID) {
-                var self = this,
-                    $backgroundVideoContainer = self.elements.$backgroundVideoContainer,
-                    elementSettings = self.getElementSettings(),
-                    startStateCode = YT.PlayerState.PLAYING;
-
-                // Since version 67, Chrome doesn't fire the `PLAYING` state at start time
-                if (window.chrome) {
-                    startStateCode = YT.PlayerState.UNSTARTED;
-                }
-
-                $backgroundVideoContainer.addClass('yjzan-loading yjzan-invisible');
-
-                self.player = new YT.Player(self.elements.$backgroundVideoEmbed[0], {
-                    videoId: videoID,
-                    events: {
-                        onReady: function onReady() {
-                            self.player.mute();
-
-                            self.changeVideoSize();
-
-                            self.startVideoLoop();
-
-                            self.player.playVideo();
+                self.children.each(function (view) {
+                    var localFieldsControl = view.children.last(),
+                        options = {
+                            '': '- ' + yjzan.translate('None') + ' -'
                         },
-                        onStateChange: function onStateChange(event) {
-                            switch (event.data) {
-                                case startStateCode:
-                                    $backgroundVideoContainer.removeClass('yjzan-invisible yjzan-loading');
+                        label = view.model.get('remote_label');
 
-                                    break;
-                                case YT.PlayerState.ENDED:
-                                    self.player.seekTo(elementSettings.background_video_start || 0);
-                            }
+                    if (view.model.get('remote_required')) {
+                        label += '<span class="yjzan-required">*</span>';
+                    }
+
+                    _.each(self.elementSettingsModel.get('form_fields').models, function (model, index) {
+                        // If it's an email field, add only email fields from thr form
+                        var remoteType = view.model.get('remote_type');
+
+                        if ('text' !== remoteType && remoteType !== model.get('field_type')) {
+                            return;
                         }
-                    },
-                    playerVars: {
-                        controls: 0,
-                        rel: 0
-                    }
-                });
 
-                yjzanFrontend.elements.$window.on('resize', self.changeVideoSize);
-            },
-
-            activate: function activate() {
-                /**by jack 支持外链视频*/
-                var self = this;
-                if(self.getElementSettings('background_use_out_link'))
-                {
-                    var videoLink = self.getElementSettings('background_video_link');
-                }
-                else
-                {
-                    var videoLink = self.getElementSettings('background_video_hosted_link').url;
-                }
-
-                var videoID = yjzanFrontend.utils.youtube.getYoutubeIDFromURL(videoLink);
-
-                self.isYTVideo = !!videoID;
-
-                if (videoID) {
-                    yjzanFrontend.utils.youtube.onYoutubeApiReady(function (YT) {
-                        setTimeout(function () {
-                            self.prepareYTVideo(YT, videoID);
-                        }, 1);
-                    });
-                } else {
-                    self.elements.$backgroundVideoHosted.attr('src', videoLink).one('canplay', self.changeVideoSize);
-                }
-            },
-
-            deactivate: function deactivate() {
-                if (this.isYTVideo && this.player.getIframe()) {
-                    this.player.destroy();
-                } else {
-                    this.elements.$backgroundVideoHosted.removeAttr('src');
-                }
-            },
-
-            run: function run() {
-                //by jack
-                var elementSettings = this.getElementSettings();
-                if ('video' === elementSettings.background_background && elementSettings.background_video_link) {
-                    this.activate();
-                }else if('video' === elementSettings.background_background && elementSettings.background_video_hosted_link)
-                {
-                    this.activate();
-                }
-                else {
-                    this.deactivate();
-                }
-            },
-
-            onInit: function onInit() {
-                yjzanModules.frontend.handlers.Base.prototype.onInit.apply(this, arguments);
-
-                this.run();
-            },
-
-            onElementChange: function onElementChange(propertyName) {
-                if ('background_background' === propertyName) {
-                    this.run();
-                }
-            }
-        });
-
-        var StretchedSection = yjzanModules.frontend.handlers.Base.extend({
-
-            stretchElement: null,
-
-            bindEvents: function bindEvents() {
-                var handlerID = this.getUniqueHandlerID();
-
-                yjzanFrontend.addListenerOnce(handlerID, 'resize', this.stretch);
-
-                yjzanFrontend.addListenerOnce(handlerID, 'sticky:stick', this.stretch, this.$element);
-
-                yjzanFrontend.addListenerOnce(handlerID, 'sticky:unstick', this.stretch, this.$element);
-            },
-
-            unbindEvents: function unbindEvents() {
-                yjzanFrontend.removeListeners(this.getUniqueHandlerID(), 'resize', this.stretch);
-            },
-
-            initStretch: function initStretch() {
-                this.stretchElement = new yjzanModules.frontend.tools.StretchElement({
-                    element: this.$element,
-                    selectors: {
-                        container: this.getStretchContainer()
-                    }
-                });
-            },
-
-            getStretchContainer: function getStretchContainer() {
-                return yjzanFrontend.getGeneralSettings('yjzan_stretched_section_container') || window;
-            },
-
-            stretch: function stretch() {
-                if (!this.getElementSettings('stretch_section')) {
-                    return;
-                }
-
-                this.stretchElement.stretch();
-            },
-
-            onInit: function onInit() {
-                yjzanModules.frontend.handlers.Base.prototype.onInit.apply(this, arguments);
-
-                this.initStretch();
-
-                this.stretch();
-            },
-
-            onElementChange: function onElementChange(propertyName) {
-                if ('stretch_section' === propertyName) {
-                    if (this.getElementSettings('stretch_section')) {
-                        this.stretch();
-                    } else {
-                        this.stretchElement.reset();
-                    }
-                }
-            },
-
-            onGeneralSettingsChange: function onGeneralSettingsChange(changed) {
-                if ('yjzan_stretched_section_container' in changed) {
-                    this.stretchElement.setSettings('selectors.container', this.getStretchContainer());
-
-                    this.stretch();
-                }
-            }
-        });
-
-        var Shapes = yjzanModules.frontend.handlers.Base.extend({
-
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    selectors: {
-                        container: '> .yjzan-shape-%s'
-                    },
-                    svgURL: yjzanFrontend.config.urls.assets + 'shapes/'
-                };
-            },
-
-            getDefaultElements: function getDefaultElements() {
-                var elements = {},
-                    selectors = this.getSettings('selectors');
-
-                elements.$topContainer = this.$element.find(selectors.container.replace('%s', 'top'));
-
-                elements.$bottomContainer = this.$element.find(selectors.container.replace('%s', 'bottom'));
-
-                return elements;
-            },
-
-            getSvgURL: function getSvgURL(shapeType, fileName) {
-                var svgURL = this.getSettings('svgURL') + fileName + '.svg';
-                if (yjzan.config.additional_shapes && shapeType in yjzan.config.additional_shapes) {
-                    svgURL = yjzan.config.additional_shapes[shapeType];
-                }
-                return svgURL;
-            },
-
-
-            buildSVG: function buildSVG(side) {
-                var self = this,
-                    baseSettingKey = 'shape_divider_' + side,
-                    shapeType = self.getElementSettings(baseSettingKey),
-                    $svgContainer = this.elements['$' + side + 'Container'];
-
-                $svgContainer.attr('data-shape', shapeType);
-                if (!shapeType) {
-                    $svgContainer.empty(); /**by jack 修复形状分割线显示异常*/
-                    return;
-                }
-
-                var fileName = shapeType;
-
-                if (self.getElementSettings(baseSettingKey + '_negative')) {
-                    fileName += '-negative';
-                }
-
-                var svgURL = self.getSvgURL(shapeType, fileName);
-
-                jQuery.get(svgURL, function (data) {
-                    $svgContainer.empty().append(data.childNodes[0]);
-                });
-
-                this.setNegative(side);
-            },
-
-            setNegative: function setNegative(side) {
-                this.elements['$' + side + 'Container'].attr('data-negative', !!this.getElementSettings('shape_divider_' + side + '_negative'));
-            },
-
-            onInit: function onInit() {
-                var self = this;
-
-                yjzanModules.frontend.handlers.Base.prototype.onInit.apply(self, arguments);
-
-                ['top', 'bottom'].forEach(function (side) {
-                    if (self.getElementSettings('shape_divider_' + side)) {
-                        self.buildSVG(side);
-                    }
-                });
-            },
-
-            onElementChange: function onElementChange(propertyName) {
-                var shapeChange = propertyName.match(/^shape_divider_(top|bottom)$/);
-
-                if (shapeChange) {
-                    this.buildSVG(shapeChange[1]);
-
-                    return;
-                }
-
-                var negativeChange = propertyName.match(/^shape_divider_(top|bottom)_negative$/);
-
-                if (negativeChange) {
-                    this.buildSVG(negativeChange[1]);
-
-                    this.setNegative(negativeChange[1]);
-                }
-            }
-        });
-
-        var HandlesPosition = yjzanModules.frontend.handlers.Base.extend({
-
-            isFirst: function isFirst() {
-                return this.$element.is('.yjzan-edit-mode .yjzan-top-section:first');
-            },
-
-            getOffset: function getOffset() {
-                if ('body' === yjzan.config.document.container) {
-                    return this.$element.offset().top;
-                }
-
-                var $container = jQuery(yjzan.config.document.container);
-                return this.$element.offset().top - $container.offset().top;
-            },
-
-            setHandlesPosition: function setHandlesPosition() {
-                var self = this;
-
-                if (!self.isFirst()) {
-                    return;
-                }
-
-                var offset = self.getOffset(),
-                    $handlesElement = self.$element.find('> .yjzan-element-overlay > .yjzan-editor-section-settings'),
-                    insideHandleClass = 'yjzan-section--handles-inside';
-
-                if (offset < 25) {
-                    self.$element.addClass(insideHandleClass);
-
-                    if (offset < -5) {
-                        $handlesElement.css('top', -offset);
-                    } else {
-                        $handlesElement.css('top', '');
-                    }
-                } else {
-                    self.$element.removeClass(insideHandleClass);
-                }
-            },
-
-            onInit: function onInit() {
-                this.setHandlesPosition();
-                this.$element.on('mouseenter', this.setHandlesPosition);
-            }
-        });
-
-        module.exports = function ($scope) {
-            if (yjzanFrontend.isEditMode() || $scope.hasClass('yjzan-section-stretched')) {
-                yjzanFrontend.elementsHandler.addHandler(StretchedSection, { $element: $scope });
-            }
-
-            if (yjzanFrontend.isEditMode()) {
-                yjzanFrontend.elementsHandler.addHandler(Shapes, { $element: $scope });
-                yjzanFrontend.elementsHandler.addHandler(HandlesPosition, { $element: $scope });
-            }
-
-            yjzanFrontend.elementsHandler.addHandler(BackgroundVideo, { $element: $scope });
-        };
-
-        /***/ }),
-
-    /***/ 185:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var TabsModule = __webpack_require__(18);
-
-        module.exports = function ($scope) {
-            yjzanFrontend.elementsHandler.addHandler(TabsModule, {
-                $element: $scope,
-                showTabFn: 'slideDown',
-                hideTabFn: 'slideUp'
-            });
-        };
-
-        /***/ }),
-
-    /***/ 186:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        module.exports = function ($scope, $) {
-            $scope.find('.yjzan-alert-dismiss').on('click', function () {
-                $(this).parent().fadeOut();
-            });
-        };
-
-        /***/ }),
-
-    /***/ 187:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        module.exports = function ($scope, $) {
-            yjzanFrontend.waypoint($scope.find('.yjzan-counter-number'), function () {
-                var $number = $(this),
-                    data = $number.data();
-
-                var decimalDigits = data.toValue.toString().match(/\.(.*)/);
-
-                if (decimalDigits) {
-                    data.rounding = decimalDigits[1].length;
-                }
-
-                $number.numerator(data);
-            });
-        };
-
-        /***/ }),
-
-    /***/ 188:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        module.exports = function ($scope, $) {
-            yjzanFrontend.waypoint($scope.find('.yjzan-progress-bar'), function () {
-                var $progressbar = $(this);
-
-                $progressbar.css('width', $progressbar.data('max') + '%');
-            });
-        };
-
-        /***/ }),
-
-    /***/ 189:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var TabsModule = __webpack_require__(18);
-
-        module.exports = function ($scope) {
-            yjzanFrontend.elementsHandler.addHandler(TabsModule, {
-                $element: $scope,
-                toggleSelf: false
-            });
-        };
-
-        /***/ }),
-
-    /***/ 190:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var TabsModule = __webpack_require__(18);
-
-        module.exports = function ($scope) {
-            yjzanFrontend.elementsHandler.addHandler(TabsModule, {
-                $element: $scope,
-                showTabFn: 'slideDown',
-                hideTabFn: 'slideUp',
-                hidePrevious: false,
-                autoExpand: 'editor'
-            });
-        };
-
-        /***/ }),
-
-    /***/ 191:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var VideoModule = yjzanModules.frontend.handlers.Base.extend({
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    selectors: {
-                        imageOverlay: '.yjzan-custom-embed-image-overlay',
-                        video: '.yjzan-video',
-                        videoIframe: '.yjzan-video-iframe'
-                    }
-                };
-            },
-
-            getDefaultElements: function getDefaultElements() {
-                var selectors = this.getSettings('selectors');
-
-                return {
-                    $imageOverlay: this.$element.find(selectors.imageOverlay),
-                    $video: this.$element.find(selectors.video),
-                    $videoIframe: this.$element.find(selectors.videoIframe)
-                };
-            },
-
-            getLightBox: function getLightBox() {
-                return yjzanFrontend.utils.lightbox;
-            },
-
-            handleVideo: function handleVideo() {
-                if (!this.getElementSettings('lightbox')) {
-                    this.elements.$imageOverlay.remove();
-
-                    this.playVideo();
-                }
-            },
-
-            playVideo: function playVideo() {
-                if (this.elements.$video.length) {
-                    this.elements.$video[0].play();
-
-                    return;
-                }
-
-                var $videoIframe = this.elements.$videoIframe,
-                    lazyLoad = $videoIframe.data('lazy-load');
-
-                if (lazyLoad) {
-                    $videoIframe.attr('src', lazyLoad);
-                }
-
-                var newSourceUrl = $videoIframe[0].src.replace('&autoplay=0', '');
-
-                $videoIframe[0].src = newSourceUrl + '&autoplay=1';
-            },
-
-            animateVideo: function animateVideo() {
-                this.getLightBox().setEntranceAnimation(this.getCurrentDeviceSetting('lightbox_content_animation'));
-            },
-
-            handleAspectRatio: function handleAspectRatio() {
-                this.getLightBox().setVideoAspectRatio(this.getElementSettings('aspect_ratio'));
-            },
-
-            bindEvents: function bindEvents() {
-                this.elements.$imageOverlay.on('click', this.handleVideo);
-            },
-
-            onElementChange: function onElementChange(propertyName) {
-                if (0 === propertyName.indexOf('lightbox_content_animation')) {
-                    this.animateVideo();
-
-                    return;
-                }
-
-                var isLightBoxEnabled = this.getElementSettings('lightbox');
-
-                if ('lightbox' === propertyName && !isLightBoxEnabled) {
-                    this.getLightBox().getModal().hide();
-
-                    return;
-                }
-
-                if ('aspect_ratio' === propertyName && isLightBoxEnabled) {
-                    this.handleAspectRatio();
-                }
-            }
-        });
-
-        module.exports = function ($scope) {
-            yjzanFrontend.elementsHandler.addHandler(VideoModule, { $element: $scope });
-        };
-
-        /***/ }),
-
-    /***/ 192:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var ImageCarouselHandler = yjzanModules.frontend.handlers.Base.extend({
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    selectors: {
-                        carousel: '.yjzan-image-carousel'
-                    }
-                };
-            },
-
-            getDefaultElements: function getDefaultElements() {
-                var selectors = this.getSettings('selectors');
-
-                return {
-                    $carousel: this.$element.find(selectors.carousel)
-                };
-            },
-
-            onInit: function onInit() {
-                yjzanModules.frontend.handlers.Base.prototype.onInit.apply(this, arguments);
-
-                var elementSettings = this.getElementSettings(),
-                    slidesToShow = +elementSettings.slides_to_show || 3,
-                    isSingleSlide = 1 === slidesToShow,
-                    defaultLGDevicesSlidesCount = isSingleSlide ? 1 : 2,
-                    breakpoints = yjzanFrontend.config.breakpoints;
-
-                var slickOptions = {
-                    slidesToShow: slidesToShow,
-                    autoplay: 'yes' === elementSettings.autoplay,
-                    autoplaySpeed: elementSettings.autoplay_speed,
-                    infinite: 'yes' === elementSettings.infinite,
-                    pauseOnHover: 'yes' === elementSettings.pause_on_hover,
-                    speed: elementSettings.speed,
-                    arrows: -1 !== ['arrows', 'both'].indexOf(elementSettings.navigation),
-                    dots: -1 !== ['dots', 'both'].indexOf(elementSettings.navigation),
-                    rtl: 'rtl' === elementSettings.direction,
-                    responsive: [{
-                        breakpoint: breakpoints.lg,
-                        settings: {
-                            slidesToShow: +elementSettings.slides_to_show_tablet || defaultLGDevicesSlidesCount,
-                            slidesToScroll: +elementSettings.slides_to_scroll_tablet || defaultLGDevicesSlidesCount
-                        }
-                    }, {
-                        breakpoint: breakpoints.md,
-                        settings: {
-                            slidesToShow: +elementSettings.slides_to_show_mobile || 1,
-                            slidesToScroll: +elementSettings.slides_to_scroll_mobile || 1
-                        }
-                    }]
-                };
-
-                if (isSingleSlide) {
-                    slickOptions.fade = 'fade' === elementSettings.effect;
-                } else {
-                    slickOptions.slidesToScroll = +elementSettings.slides_to_scroll || defaultLGDevicesSlidesCount;
-                }
-
-                this.elements.$carousel.slick(slickOptions);
-            }
-        });
-
-        module.exports = function ($scope) {
-            yjzanFrontend.elementsHandler.addHandler(ImageCarouselHandler, { $element: $scope });
-        };
-
-        /***/ }),
-
-    /***/ 193:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var TextEditor = yjzanModules.frontend.handlers.Base.extend({
-            dropCapLetter: '',
-
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    selectors: {
-                        paragraph: 'p:first'
-                    },
-                    classes: {
-                        dropCap: 'yjzan-drop-cap',
-                        dropCapLetter: 'yjzan-drop-cap-letter'
-                    }
-                };
-            },
-
-            getDefaultElements: function getDefaultElements() {
-                var selectors = this.getSettings('selectors'),
-                    classes = this.getSettings('classes'),
-                    $dropCap = jQuery('<span>', { class: classes.dropCap }),
-                    $dropCapLetter = jQuery('<span>', { class: classes.dropCapLetter });
-
-                $dropCap.append($dropCapLetter);
-
-                return {
-                    $paragraph: this.$element.find(selectors.paragraph),
-                    $dropCap: $dropCap,
-                    $dropCapLetter: $dropCapLetter
-                };
-            },
-
-            wrapDropCap: function wrapDropCap() {
-                var isDropCapEnabled = this.getElementSettings('drop_cap');
-
-                if (!isDropCapEnabled) {
-                    // If there is an old drop cap inside the paragraph
-                    if (this.dropCapLetter) {
-                        this.elements.$dropCap.remove();
-
-                        this.elements.$paragraph.prepend(this.dropCapLetter);
-
-                        this.dropCapLetter = '';
-                    }
-
-                    return;
-                }
-
-                var $paragraph = this.elements.$paragraph;
-
-                if (!$paragraph.length) {
-                    return;
-                }
-
-                var paragraphContent = $paragraph.html().replace(/&nbsp;/g, ' '),
-                    firstLetterMatch = paragraphContent.match(/^ *([^ ] ?)/);
-
-                if (!firstLetterMatch) {
-                    return;
-                }
-
-                var firstLetter = firstLetterMatch[1],
-                    trimmedFirstLetter = firstLetter.trim();
-
-                // Don't apply drop cap when the content starting with an HTML tag
-                if ('<' === trimmedFirstLetter) {
-                    return;
-                }
-
-                this.dropCapLetter = firstLetter;
-
-                this.elements.$dropCapLetter.text(trimmedFirstLetter);
-
-                var restoredParagraphContent = paragraphContent.slice(firstLetter.length).replace(/^ */, function (match) {
-                    return new Array(match.length + 1).join('&nbsp;');
-                });
-
-                $paragraph.html(restoredParagraphContent).prepend(this.elements.$dropCap);
-            },
-
-            onInit: function onInit() {
-                yjzanModules.frontend.handlers.Base.prototype.onInit.apply(this, arguments);
-
-                this.wrapDropCap();
-            },
-
-            onElementChange: function onElementChange(propertyName) {
-                if ('drop_cap' === propertyName) {
-                    this.wrapDropCap();
-                }
-            }
-        });
-
-        module.exports = function ($scope) {
-            yjzanFrontend.elementsHandler.addHandler(TextEditor, { $element: $scope });
-        };
-
-        /***/ }),
-
-    /***/ 194:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        var GlobalHandler = yjzanModules.frontend.handlers.Base.extend({
-            getWidgetType: function getWidgetType() {
-                return 'global';
-            },
-            animate: function animate() {
-                var $element = this.$element,
-                    animation = this.getAnimation();
-
-                if ('none' === animation) {
-                    $element.removeClass('yjzan-invisible');
-                    return;
-                }
-
-                var elementSettings = this.getElementSettings(),
-                    animationDelay = elementSettings._animation_delay || elementSettings.animation_delay || 0;
-
-                $element.removeClass(animation);
-
-                if (this.currentAnimation) {
-                    $element.removeClass(this.currentAnimation);
-                }
-
-                this.currentAnimation = animation;
-
-                setTimeout(function () {
-                    $element.removeClass('yjzan-invisible').addClass('animated ' + animation);
-                }, animationDelay);
-            },
-            getAnimation: function getAnimation() {
-                return this.getCurrentDeviceSetting('animation') || this.getCurrentDeviceSetting('_animation');
-            },
-            onInit: function onInit() {
-                yjzanModules.frontend.handlers.Base.prototype.onInit.apply(this, arguments);
-
-                if (this.getAnimation()) {
-                    yjzanFrontend.waypoint(this.$element, this.animate.bind(this));
-                }
-            },
-            onElementChange: function onElementChange(propertyName) {
-                if (/^_?animation/.test(propertyName)) {
-                    this.animate();
-                }
-            }
-        });
-
-        module.exports = function ($scope) {
-            yjzanFrontend.elementsHandler.addHandler(GlobalHandler, { $element: $scope });
-        };
-
-        /***/ }),
-
-    /***/ 195:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        module.exports = yjzanModules.ViewModule.extend({
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    isInserted: false,
-                    APISrc: 'https://www.youtube.com/iframe_api',
-                    selectors: {
-                        firstScript: 'script:first'
-                    }
-                };
-            },
-
-            getDefaultElements: function getDefaultElements() {
-                return {
-                    $firstScript: jQuery(this.getSettings('selectors.firstScript'))
-                };
-            },
-
-            insertYTAPI: function insertYTAPI() {
-                this.setSettings('isInserted', true);
-
-                this.elements.$firstScript.before(jQuery('<script>', { src: this.getSettings('APISrc') }));
-            },
-
-            onYoutubeApiReady: function onYoutubeApiReady(callback) {
-                var self = this;
-
-                if (!self.getSettings('IsInserted')) {
-                    self.insertYTAPI();
-                }
-
-                if (window.YT && YT.loaded) {
-                    callback(YT);
-                } else {
-                    // If not ready check again by timeout..
-                    setTimeout(function () {
-                        self.onYoutubeApiReady(callback);
-                    }, 350);
-                }
-            },
-
-            getYoutubeIDFromURL: function getYoutubeIDFromURL(url) {
-                var videoIDParts = url.match(/^(?:https?:\/\/)?(?:www\.)?(?:m\.)?(?:youtu\.be\/|youtube\.com\/(?:(?:watch)?\?(?:.*&)?vi?=|(?:embed|v|vi|user)\/))([^?&"'>]+)/);
-
-                return videoIDParts && videoIDParts[1];
-            }
-        });
-
-        /***/ }),
-
-    /***/ 196:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        module.exports = yjzanModules.ViewModule.extend({
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    scrollDuration: 500,
-                    selectors: {
-                        links: 'a[href*="#"]',
-                        targets: '.yjzan-element, .yjzan-menu-anchor',
-                        scrollable: 'html, body'
-                    }
-                };
-            },
-
-            getDefaultElements: function getDefaultElements() {
-                var $ = jQuery,
-                    selectors = this.getSettings('selectors');
-
-                return {
-                    $scrollable: $(selectors.scrollable)
-                };
-            },
-
-            bindEvents: function bindEvents() {
-                yjzanFrontend.elements.$document.on('click', this.getSettings('selectors.links'), this.handleAnchorLinks);
-            },
-
-            handleAnchorLinks: function handleAnchorLinks(event) {
-                var clickedLink = event.currentTarget,
-                    isSamePathname = location.pathname === clickedLink.pathname,
-                    isSameHostname = location.hostname === clickedLink.hostname,
-                    $anchor;
-
-                if (!isSameHostname || !isSamePathname || clickedLink.hash.length < 2) {
-                    return;
-                }
-
-                try {
-                    $anchor = jQuery(clickedLink.hash).filter(this.getSettings('selectors.targets'));
-                } catch (e) {
-                    return;
-                }
-
-                if (!$anchor.length) {
-                    return;
-                }
-
-                var scrollTop = $anchor.offset().top,
-                    $wpAdminBar = yjzanFrontend.elements.$wpAdminBar,
-                    $activeStickies = jQuery('.yjzan-section.yjzan-sticky--active'),
-                    maxStickyHeight = 0;
-
-                if ($wpAdminBar.length > 0) {
-                    scrollTop -= $wpAdminBar.height();
-                }
-
-                // Offset height of tallest sticky
-                if ($activeStickies.length > 0) {
-                    maxStickyHeight = Math.max.apply(null, $activeStickies.map(function () {
-                        return jQuery(this).outerHeight();
-                    }).get());
-
-                    scrollTop -= maxStickyHeight;
-                }
-
-                event.preventDefault();
-
-                scrollTop = yjzanFrontend.hooks.applyFilters('frontend/handlers/menu_anchor/scroll_top_distance', scrollTop);
-
-                this.elements.$scrollable.animate({
-                    scrollTop: scrollTop
-                }, this.getSettings('scrollDuration'), 'linear');
-            },
-
-            onInit: function onInit() {
-                yjzanModules.ViewModule.prototype.onInit.apply(this, arguments);
-
-                this.bindEvents();
-            }
-        });
-
-        /***/ }),
-
-    /***/ 197:
-    /***/ (function(module, exports, __webpack_require__) {
-
-        "use strict";
-
-
-        module.exports = yjzanModules.ViewModule.extend({
-            oldAspectRatio: null,
-
-            oldAnimation: null,
-
-            swiper: null,
-
-            getDefaultSettings: function getDefaultSettings() {
-                return {
-                    classes: {
-                        aspectRatio: 'yjzan-aspect-ratio-%s',
-                        item: 'yjzan-lightbox-item',
-                        image: 'yjzan-lightbox-image',
-                        videoContainer: 'yjzan-video-container',
-                        videoWrapper: 'yjzan-fit-aspect-ratio',
-                        playButton: 'yjzan-custom-embed-play',
-                        playButtonIcon: 'fa',
-                        playing: 'yjzan-playing',
-                        hidden: 'yjzan-hidden',
-                        invisible: 'yjzan-invisible',
-                        preventClose: 'yjzan-lightbox-prevent-close',
-                        slideshow: {
-                            container: 'swiper-container',
-                            slidesWrapper: 'swiper-wrapper',
-                            prevButton: 'yjzan-swiper-button yjzan-swiper-button-prev',
-                            nextButton: 'yjzan-swiper-button yjzan-swiper-button-next',
-                            prevButtonIcon: 'eicon-chevron-left',
-                            nextButtonIcon: 'eicon-chevron-right',
-                            slide: 'swiper-slide'
-                        }
-                    },
-                    selectors: {
-                        links: 'a, [data-yjzan-lightbox]',
-                        slideshow: {
-                            activeSlide: '.swiper-slide-active',
-                            prevSlide: '.swiper-slide-prev',
-                            nextSlide: '.swiper-slide-next'
-                        }
-                    },
-                    modalOptions: {
-                        id: 'yjzan-lightbox',
-                        entranceAnimation: 'zoomIn',
-                        videoAspectRatio: 169,
-                        position: {
-                            enable: false
-                        }
-                    }
-                };
-            },
-
-            getModal: function getModal() {
-                if (!module.exports.modal) {
-                    this.initModal();
-                }
-
-                return module.exports.modal;
-            },
-
-            initModal: function initModal() {
-                var modal = module.exports.modal = yjzanFrontend.getDialogsManager().createWidget('lightbox', {
-                    className: 'yjzan-lightbox',
-                    closeButton: true,
-                    closeButtonClass: 'eicon-close',
-                    selectors: {
-                        preventClose: '.' + this.getSettings('classes.preventClose')
-                    },
-                    hide: {
-                        onClick: true
-                    }
-                });
-
-                modal.on('hide', function () {
-                    modal.setMessage('');
-                });
-            },
-
-            showModal: function showModal(options) {
-                var self = this,
-                    defaultOptions = self.getDefaultSettings().modalOptions;
-
-                self.setSettings('modalOptions', jQuery.extend(defaultOptions, options.modalOptions));
-
-                var modal = self.getModal();
-
-                modal.setID(self.getSettings('modalOptions.id'));
-
-                modal.onShow = function () {
-                    DialogsManager.getWidgetType('lightbox').prototype.onShow.apply(modal, arguments);
-
-                    self.setEntranceAnimation();
-                };
-
-                modal.onHide = function () {
-                    DialogsManager.getWidgetType('lightbox').prototype.onHide.apply(modal, arguments);
-
-                    modal.getElements('message').removeClass('animated');
-                };
-
-                switch (options.type) {
-                    case 'image':
-                        self.setImageContent(options.url);
-
-                        break;
-                    case 'video':
-                        self.setVideoContent(options);
-
-                        break;
-                    case 'slideshow':
-                        self.setSlideshowContent(options.slideshow);
-
-                        break;
-                    default:
-                        self.setHTMLContent(options.html);
-                }
-
-                modal.show();
-            },
-
-            setHTMLContent: function setHTMLContent(html) {
-                this.getModal().setMessage(html);
-            },
-
-            setImageContent: function setImageContent(imageURL) {
-                var self = this,
-                    classes = self.getSettings('classes'),
-                    $item = jQuery('<div>', { class: classes.item }),
-                    $image = jQuery('<img>', { src: imageURL, class: classes.image + ' ' + classes.preventClose });
-
-                $item.append($image);
-
-                self.getModal().setMessage($item);
-            },
-
-            setVideoContent: function setVideoContent(options) {
-                var classes = this.getSettings('classes'),
-                    $videoContainer = jQuery('<div>', { class: classes.videoContainer }),
-                    $videoWrapper = jQuery('<div>', { class: classes.videoWrapper }),
-                    $videoElement,
-                    modal = this.getModal();
-
-                if ('hosted' === options.videoType) {
-                    var videoParams = jQuery.extend({ src: options.url, autoplay: '' }, options.videoParams);
-
-                    $videoElement = jQuery('<video>', videoParams);
-                } else {
-                    //by jack
-                    //var videoURL = options.url.replace('&autoplay=0', '') + '&autoplay=1';
-
-                    $videoElement = jQuery('<iframe>', { src: options.url, allowfullscreen: 1 });
-                }
-
-                $videoContainer.append($videoWrapper);
-
-                $videoWrapper.append($videoElement);
-
-                modal.setMessage($videoContainer);
-
-                this.setVideoAspectRatio();
-
-                var onHideMethod = modal.onHide;
-
-                modal.onHide = function () {
-                    onHideMethod();
-
-                    modal.getElements('message').removeClass('yjzan-fit-aspect-ratio');
-                };
-            },
-
-            setSlideshowContent: function setSlideshowContent(options) {
-                var $ = jQuery,
-                    self = this,
-                    classes = self.getSettings('classes'),
-                    slideshowClasses = classes.slideshow,
-                    $container = $('<div>', { class: slideshowClasses.container }),
-                    $slidesWrapper = $('<div>', { class: slideshowClasses.slidesWrapper }),
-                    $prevButton = $('<div>', { class: slideshowClasses.prevButton + ' ' + classes.preventClose }).html($('<i>', { class: slideshowClasses.prevButtonIcon })),
-                    $nextButton = $('<div>', { class: slideshowClasses.nextButton + ' ' + classes.preventClose }).html($('<i>', { class: slideshowClasses.nextButtonIcon }));
-
-                options.slides.forEach(function (slide) {
-                    var slideClass = slideshowClasses.slide + ' ' + classes.item;
-
-                    if (slide.video) {
-                        slideClass += ' ' + classes.video;
-                    }
-
-                    var $slide = $('<div>', { class: slideClass });
-
-                    if (slide.video) {
-                        $slide.attr('data-yjzan-slideshow-video', slide.video);
-
-                        var $playIcon = $('<div>', { class: classes.playButton }).html($('<i>', { class: classes.playButtonIcon }));
-
-                        $slide.append($playIcon);
-                    } else {
-                        var $zoomContainer = $('<div>', { class: 'swiper-zoom-container' }),
-                            $slideImage = $('<img>', { class: classes.image + ' ' + classes.preventClose, src: slide.image });
-
-                        $zoomContainer.append($slideImage);
-
-                        $slide.append($zoomContainer);
-                    }
-
-                    $slidesWrapper.append($slide);
-                });
-
-                $container.append($slidesWrapper, $prevButton, $nextButton);
-
-                var modal = self.getModal();
-
-                modal.setMessage($container);
-
-                var onShowMethod = modal.onShow;
-
-                modal.onShow = function () {
-                    onShowMethod();
-
-                    var swiperOptions = {
-                        navigation: {
-                            prevEl: $prevButton,
-                            nextEl: $nextButton
-                        },
-                        pagination: {
-                            clickable: true
-                        },
-                        on: {
-                            slideChangeTransitionEnd: self.onSlideChange
-                        },
-                        grabCursor: true,
-                        runCallbacksOnInit: false,
-                        loop: true,
-                        keyboard: true
-                    };
-
-                    if (options.swiper) {
-                        $.extend(swiperOptions, options.swiper);
-                    }
-
-                    self.swiper = new Swiper($container, swiperOptions);
-
-                    self.setVideoAspectRatio();
-
-                    self.playSlideVideo();
-                };
-            },
-
-            setVideoAspectRatio: function setVideoAspectRatio(aspectRatio) {
-                aspectRatio = aspectRatio || this.getSettings('modalOptions.videoAspectRatio');
-
-                var $widgetContent = this.getModal().getElements('widgetContent'),
-                    oldAspectRatio = this.oldAspectRatio,
-                    aspectRatioClass = this.getSettings('classes.aspectRatio');
-
-                this.oldAspectRatio = aspectRatio;
-
-                if (oldAspectRatio) {
-                    $widgetContent.removeClass(aspectRatioClass.replace('%s', oldAspectRatio));
-                }
-
-                if (aspectRatio) {
-                    $widgetContent.addClass(aspectRatioClass.replace('%s', aspectRatio));
-                }
-            },
-
-            getSlide: function getSlide(slideState) {
-                return jQuery(this.swiper.slides).filter(this.getSettings('selectors.slideshow.' + slideState + 'Slide'));
-            },
-
-            playSlideVideo: function playSlideVideo() {
-                var $activeSlide = this.getSlide('active'),
-                    videoURL = $activeSlide.data('yjzan-slideshow-video');
-
-                if (!videoURL) {
-                    return;
-                }
-
-                var classes = this.getSettings('classes'),
-                    $videoContainer = jQuery('<div>', { class: classes.videoContainer + ' ' + classes.invisible }),
-                    $videoWrapper = jQuery('<div>', { class: classes.videoWrapper }),
-                    $videoFrame = jQuery('<iframe>', { src: videoURL }),
-                    $playIcon = $activeSlide.children('.' + classes.playButton);
-
-                $videoContainer.append($videoWrapper);
-
-                $videoWrapper.append($videoFrame);
-
-                $activeSlide.append($videoContainer);
-
-                $playIcon.addClass(classes.playing).removeClass(classes.hidden);
-
-                $videoFrame.on('load', function () {
-                    $playIcon.addClass(classes.hidden);
-
-                    $videoContainer.removeClass(classes.invisible);
-                });
-            },
-
-            setEntranceAnimation: function setEntranceAnimation(animation) {
-                animation = animation || yjzanFrontend.getCurrentDeviceSetting(this.getSettings('modalOptions'), 'entranceAnimation');
-
-                var $widgetMessage = this.getModal().getElements('message');
-
-                if (this.oldAnimation) {
-                    $widgetMessage.removeClass(this.oldAnimation);
-                }
-
-                this.oldAnimation = animation;
-
-                if (animation) {
-                    $widgetMessage.addClass('animated ' + animation);
-                }
-            },
-
-            isLightboxLink: function isLightboxLink(element) {
-                /**yjz的link全部通过by jack*/
-                if(element.href !=undefined && element.href.indexOf('media.yjzan.com')==-1){
-                    if ('A' === element.tagName && (element.hasAttribute('download') || !/\.(png|jpe?g|gif|svg)(\?.*)?$/i.test(element.href))) {
-                        return false;
-                    }
-                }
-
-                var generalOpenInLightbox = yjzanFrontend.getGeneralSettings('yjzan_global_image_lightbox'),
-                    currentLinkOpenInLightbox = element.dataset.yjzanOpenLightbox;
-
-                return 'yes' === currentLinkOpenInLightbox || generalOpenInLightbox && 'no' !== currentLinkOpenInLightbox;
-            },
-
-            openLink: function openLink(event) {
-                var element = event.currentTarget,
-                    $target = jQuery(event.target),
-                    editMode = yjzanFrontend.isEditMode(),
-                    isClickInsideYjzan = !!$target.closest('#yjzan').length;
-
-                if (!this.isLightboxLink(element)) {
-                    if (editMode && isClickInsideYjzan) {
-                        event.preventDefault();
-                    }
-
-                    return;
-                }
-
-                event.preventDefault();
-
-                if (editMode && !yjzanFrontend.getGeneralSettings('yjzan_enable_lightbox_in_editor')) {
-                    return;
-                }
-
-                var lightboxData = {};
-
-                if (element.dataset.yjzanLightbox) {
-                    lightboxData = JSON.parse(element.dataset.yjzanLightbox);
-                }
-
-                if (lightboxData.type && 'slideshow' !== lightboxData.type) {
-                    this.showModal(lightboxData);
-
-                    return;
-                }
-
-                if (!element.dataset.yjzanLightboxSlideshow) {
-                    this.showModal({
-                        type: 'image',
-                        url: element.href
+                        options[model.get('custom_id')] = model.get('field_label') || 'Field #' + (index + 1);
                     });
 
+                    localFieldsControl.model.set('label', label);
+                    localFieldsControl.model.set('options', options);
+                    localFieldsControl.render();
+
+                    view.$el.find('.yjzan-repeater-row-tools').hide();
+                    view.$el.find('.yjzan-repeater-row-controls').removeClass('yjzan-repeater-row-controls').find('.yjzan-control').css({
+                        paddingBottom: 0
+                    });
+                });
+
+                self.$el.find('.yjzan-button-wrapper').remove();
+
+                if (self.children.length) {
+                    self.$el.show();
+                }
+            }
+        });
+
+        /***/ }),
+    /* 32 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            onYjzanPreviewLoaded: function onYjzanPreviewLoaded() {
+                var EditButton = __webpack_require__(33);
+                this.editButton = new EditButton();
+            }
+        });
+
+        /***/ }),
+    /* 33 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = function () {
+            var self = this;
+
+            self.onPanelShow = function (panel) {
+                var model = panel.content.currentView.collection.findWhere({ name: 'template_id' });
+                self.templateIdView = panel.content.currentView.children.findByModelCid(model.cid);
+
+                // Change Edit link on render & on change template.
+                self.templateIdView.elementSettingsModel.on('change', self.onTemplateIdChange);
+                self.templateIdView.on('render', self.onTemplateIdChange);
+            };
+
+            self.onTemplateIdChange = function () {
+                var templateID = self.templateIdView.elementSettingsModel.get('template_id'),
+                    $editButton = self.templateIdView.$el.find('.yjzan-edit-template');
+
+                if (!templateID) {
+                    $editButton.remove();
                     return;
                 }
 
-                var slideshowID = element.dataset.yjzanLightboxSlideshow;
+                var editUrl = YjzanConfig.home_url + '?p=' + templateID + '&yjzan';
 
-                var $allSlideshowLinks = jQuery(this.getSettings('selectors.links')).filter(function () {
-                    return slideshowID === this.dataset.yjzanLightboxSlideshow;
+                if ($editButton.length) {
+                    $editButton.prop('href', editUrl);
+                } else {
+                    $editButton = jQuery('<a />', {
+                        target: '_blank',
+                        class: 'yjzan-button yjzan-button-default yjzan-edit-template',
+                        href: editUrl,
+                        html: '<i class="fa fa-pencil" /> ' + YjzanProConfig.i18n.edit_template
+                    });
+
+                    self.templateIdView.$el.find('.yjzan-control-input-wrapper').after($editButton);
+                }
+            };
+
+            self.init = function () {
+                yjzan.hooks.addAction('panel/open_editor/widget/template', self.onPanelShow);
+            };
+
+            self.init();
+        };
+
+        /***/ }),
+    /* 34 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            onYjzanInit: function onYjzanInit() {
+                var CustomCss = __webpack_require__(35);
+                this.customCss = new CustomCss();
+            }
+        });
+
+        /***/ }),
+    /* 35 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = function () {
+            var self = this;
+
+            self.init = function () {
+                yjzan.hooks.addFilter('editor/style/styleText', self.addCustomCss);
+
+                yjzan.settings.page.model.on('change', self.addPageCustomCss);
+
+                yjzan.on('preview:loaded', self.addPageCustomCss);
+            };
+
+            self.addPageCustomCss = function () {
+                var customCSS = yjzan.settings.page.model.get('custom_css');
+
+                if (customCSS) {
+                    customCSS = customCSS.replace(/selector/g, yjzan.config.settings.page.cssWrapperSelector);
+
+                    yjzan.settings.page.getControlsCSS().elements.$stylesheetElement.append(customCSS);
+                }
+            };
+
+            self.addCustomCss = function (css, view) {
+                var model = view.getEditModel(),
+                    customCSS = model.get('settings').get('custom_css');
+
+                if (customCSS) {
+                    css += customCSS.replace(/selector/g, '.yjzan-element.yjzan-element-' + view.model.id);
+                }
+
+                return css;
+            };
+
+            self.init();
+        };
+
+        /***/ }),
+    /* 36 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            globalModels: {},
+
+            panelWidgets: null,
+
+            templatesAreSaved: true,
+
+            addGlobalWidget: function addGlobalWidget(id, args) {
+                args = _.extend({}, args, {
+                    categories: [],
+                    icon: yjzan.config.widgets[args.widgetType].icon,
+                    widgetType: args.widgetType,
+                    custom: {
+                        templateID: id
+                    }
                 });
 
-                var slides = [],
-                    uniqueLinks = {};
+                var globalModel = this.createGlobalModel(id, args);
 
-                $allSlideshowLinks.each(function () {
-                    var slideVideo = this.dataset.yjzanLightboxVideo,
-                        uniqueID = slideVideo || this.href;
+                return this.panelWidgets.add(globalModel);
+            },
 
-                    if (uniqueLinks[uniqueID]) {
+            createGlobalModel: function createGlobalModel(id, modelArgs) {
+                var globalModel = new yjzan.modules.elements.models.Element(modelArgs),
+                    settingsModel = globalModel.get('settings');
+
+                globalModel.set('id', id);
+
+                settingsModel.on('change', _.bind(this.onGlobalModelChange, this));
+
+                return this.globalModels[id] = globalModel;
+            },
+
+            onGlobalModelChange: function onGlobalModelChange() {
+                this.templatesAreSaved = false;
+            },
+
+            setWidgetType: function setWidgetType() {
+                yjzan.hooks.addFilter('element/view', function (DefaultView, model) {
+                    if (model.get('templateID')) {
+                        return __webpack_require__(37);
+                    }
+
+                    return DefaultView;
+                });
+
+                yjzan.hooks.addFilter('element/model', function (DefaultModel, attrs) {
+                    if (attrs.templateID) {
+                        return __webpack_require__(38);
+                    }
+
+                    return DefaultModel;
+                });
+            },
+
+            registerTemplateType: function registerTemplateType() {
+                yjzan.templates.registerTemplateType('widget', {
+                    showInLibrary: false,
+                    saveDialog: {
+                        title: yjzanPro.translate('global_widget_save_title'),
+                        description: yjzanPro.translate('global_widget_save_description')
+                    },
+                    prepareSavedData: function prepareSavedData(data) {
+                        data.widgetType = data.content[0].widgetType;
+
+                        return data;
+                    },
+                    ajaxParams: {
+                        success: this.onWidgetTemplateSaved.bind(this)
+                    }
+                });
+            },
+
+            addSavedWidgetsToPanel: function addSavedWidgetsToPanel() {
+                var self = this;
+
+                self.panelWidgets = new Backbone.Collection();
+
+                _.each(yjzanPro.config.widget_templates, function (templateArgs, id) {
+                    self.addGlobalWidget(id, templateArgs);
+                });
+
+                yjzan.hooks.addFilter('panel/elements/regionViews', function (regionViews) {
+                    _.extend(regionViews.global, {
+                        view: __webpack_require__(39),
+                        options: {
+                            collection: self.panelWidgets
+                        }
+                    });
+
+                    return regionViews;
+                });
+            },
+
+            addPanelPage: function addPanelPage() {
+                yjzan.getPanelView().addPage('globalWidget', {
+                    view: __webpack_require__(41)
+                });
+            },
+
+            getGlobalModels: function getGlobalModels(id) {
+                if (!id) {
+                    return this.globalModels;
+                }
+
+                return this.globalModels[id];
+            },
+
+            saveTemplates: function saveTemplates() {
+                if (!Object.keys(this.globalModels).length) {
+                    return;
+                }
+
+                var templatesData = [],
+                    self = this;
+
+                _.each(this.globalModels, function (templateModel, id) {
+                    if ('loaded' !== templateModel.get('settingsLoadedStatus')) {
                         return;
                     }
 
-                    uniqueLinks[uniqueID] = true;
-
-                    var slideIndex = this.dataset.yjzanLightboxIndex;
-
-                    if (undefined === slideIndex) {
-                        slideIndex = $allSlideshowLinks.index(this);
-                    }
-
-                    var slideData = {
-                        image: this.href,
-                        index: slideIndex
+                    var data = {
+                        content: JSON.stringify([templateModel.toJSON({ removeDefault: true })]),
+                        source: 'local',
+                        type: 'widget',
+                        id: id
                     };
 
-                    if (slideVideo) {
-                        slideData.video = slideVideo;
-                    }
-
-                    slides.push(slideData);
+                    templatesData.push(data);
                 });
 
-                slides.sort(function (a, b) {
-                    return a.index - b.index;
-                });
-
-                var initialSlide = element.dataset.yjzanLightboxIndex;
-
-                if (undefined === initialSlide) {
-                    initialSlide = $allSlideshowLinks.index(element);
+                if (!templatesData.length) {
+                    return;
                 }
 
-                this.showModal({
-                    type: 'slideshow',
-                    modalOptions: {
-                        id: 'yjzan-lightbox-slideshow-' + slideshowID
+                yjzanCommon.ajax.addRequest('update_templates', {
+                    data: {
+                        templates: templatesData
                     },
-                    slideshow: {
-                        slides: slides,
-                        swiper: {
-                            initialSlide: +initialSlide
+                    success: function success() {
+                        self.templatesAreSaved = true;
+                    }
+                });
+            },
+
+            setSaveButton: function setSaveButton() {
+                yjzan.saver.on('before:save:publish', _.bind(this.saveTemplates, this));
+                yjzan.saver.on('before:save:private', _.bind(this.saveTemplates, this));
+            },
+
+            requestGlobalModelSettings: function requestGlobalModelSettings(globalModel, callback) {
+                yjzan.templates.requestTemplateContent('local', globalModel.get('id'), {
+                    success: function success(data) {
+                        globalModel.set('settingsLoadedStatus', 'loaded').trigger('settings:loaded');
+
+                        var settings = data.content[0].settings,
+                            settingsModel = globalModel.get('settings');
+
+                        // Don't track it in History
+                        yjzan.history.history.setActive(false);
+
+                        settingsModel.handleRepeaterData(settings);
+
+                        settingsModel.set(settings);
+
+                        if (callback) {
+                            callback(globalModel);
+                        }
+
+                        yjzan.history.history.setActive(true);
+                    }
+                });
+            },
+
+            // setWidgetContextMenuSaveAction: function setWidgetContextMenuSaveAction() {
+            //     yjzan.hooks.addFilter('elements/widget/contextMenuGroups', function (groups, widget) {
+            //         var saveGroup = _.findWhere(groups, { name: 'save' }),
+            //             saveAction = _.findWhere(saveGroup.actions, { name: 'save' });
+            //
+            //         saveAction.callback = widget.save.bind(widget);
+            //
+            //         delete saveAction.shortcut;
+            //
+            //         return groups;
+            //     });
+            // },
+
+            onYjzanInit: function onYjzanInit() {
+                this.setWidgetType();
+
+                this.registerTemplateType();
+                //by jack 隐藏全局变量
+                //this.setWidgetContextMenuSaveAction();
+            },
+
+            onYjzanFrontendInit: function onYjzanFrontendInit() {
+                this.addSavedWidgetsToPanel();
+            },
+
+            onYjzanPreviewLoaded: function onYjzanPreviewLoaded() {
+                this.addPanelPage();
+                this.setSaveButton();
+            },
+
+            onWidgetTemplateSaved: function onWidgetTemplateSaved(data) {
+                yjzan.history.history.startItem({
+                    title: yjzan.config.widgets[data.widgetType].title,
+                    type: yjzanPro.translate('linked_to_global')
+                });
+
+                var widgetModel = yjzan.templates.getLayout().modalContent.currentView.model,
+                    widgetModelIndex = widgetModel.collection.indexOf(widgetModel);
+
+                yjzan.templates.closeModal();
+
+                data.elType = data.type;
+                data.settings = widgetModel.get('settings').attributes;
+
+                var globalModel = this.addGlobalWidget(data.template_id, data),
+                    globalModelAttributes = globalModel.attributes;
+
+                widgetModel.collection.add({
+                    id: yjzan.helpers.getUniqueID(),
+                    elType: globalModelAttributes.type,
+                    templateID: globalModelAttributes.template_id,
+                    widgetType: 'global'
+                }, { at: widgetModelIndex }, true);
+
+                widgetModel.destroy();
+
+                var panel = yjzan.getPanelView();
+
+                panel.setPage('elements');
+
+                panel.getCurrentPageView().activateTab('global');
+
+                yjzan.history.history.endItem();
+            }
+        });
+
+        /***/ }),
+    /* 37 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var WidgetView = yjzan.modules.elements.views.Widget,
+            GlobalWidgetView;
+
+        GlobalWidgetView = WidgetView.extend({
+
+            globalModel: null,
+
+            className: function className() {
+                return WidgetView.prototype.className.apply(this, arguments) + ' yjzan-global-widget yjzan-global-' + this.model.get('templateID');
+            },
+
+            initialize: function initialize() {
+                var self = this,
+                    previewSettings = self.model.get('previewSettings'),
+                    globalModel = self.getGlobalModel();
+
+                if (previewSettings) {
+                    globalModel.set('settingsLoadedStatus', 'loaded').trigger('settings:loaded');
+
+                    var settingsModel = globalModel.get('settings');
+
+                    settingsModel.handleRepeaterData(previewSettings);
+
+                    settingsModel.set(previewSettings, { silent: true });
+                } else {
+                    var globalSettingsLoadedStatus = globalModel.get('settingsLoadedStatus');
+
+                    if (!globalSettingsLoadedStatus) {
+                        globalModel.set('settingsLoadedStatus', 'pending');
+
+                        yjzanPro.modules.globalWidget.requestGlobalModelSettings(globalModel);
+                    }
+
+                    if ('loaded' !== globalSettingsLoadedStatus) {
+                        self.$el.addClass('yjzan-loading');
+                    }
+
+                    globalModel.on('settings:loaded', function () {
+                        self.$el.removeClass('yjzan-loading');
+
+                        self.render();
+                    });
+                }
+
+                WidgetView.prototype.initialize.apply(self, arguments);
+            },
+
+            getGlobalModel: function getGlobalModel() {
+                if (!this.globalModel) {
+                    this.globalModel = yjzanPro.modules.globalWidget.getGlobalModels(this.model.get('templateID'));
+                }
+
+                return this.globalModel;
+            },
+
+            getEditModel: function getEditModel() {
+                return this.getGlobalModel();
+            },
+
+            getHTMLContent: function getHTMLContent(html) {
+                if ('loaded' === this.getGlobalModel().get('settingsLoadedStatus')) {
+                    return WidgetView.prototype.getHTMLContent.call(this, html);
+                }
+
+                return '';
+            },
+
+            serializeModel: function serializeModel() {
+                var globalModel = this.getGlobalModel();
+
+                return globalModel.toJSON.apply(globalModel, _.rest(arguments));
+            },
+
+            edit: function edit() {
+                yjzan.getPanelView().setPage('globalWidget', 'Global Editing', { editedView: this });
+            },
+
+            unlink: function unlink() {
+                var globalModel = this.getGlobalModel();
+
+                yjzan.history.history.startItem({
+                    title: globalModel.getTitle(),
+                    type: yjzanPro.translate('unlink_widget')
+                });
+
+                var newModel = new yjzan.modules.elements.models.Element({
+                    elType: 'widget',
+                    widgetType: globalModel.get('widgetType'),
+                    id: yjzan.helpers.getUniqueID(),
+                    settings: yjzan.helpers.cloneObject(globalModel.get('settings').attributes),
+                    defaultEditSettings: yjzan.helpers.cloneObject(globalModel.get('editSettings').attributes)
+                });
+
+                this._parent.addChildModel(newModel, { at: this.model.collection.indexOf(this.model) });
+
+                var newWidget = this._parent.children.findByModelCid(newModel.cid);
+
+                this.model.destroy();
+
+                yjzan.history.history.endItem();
+
+                if (newWidget.edit) {
+                    newWidget.edit();
+                }
+
+                newModel.trigger('request:edit');
+            },
+
+            onEditRequest: function onEditRequest() {
+                yjzan.getPanelView().setPage('globalWidget', 'Global Editing', { editedView: this });
+            }
+        });
+
+        module.exports = GlobalWidgetView;
+
+        /***/ }),
+    /* 38 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzan.modules.elements.models.Element.extend({
+            initialize: function initialize() {
+                this.set({ widgetType: 'global' }, { silent: true });
+
+                yjzan.modules.elements.models.Element.prototype.initialize.apply(this, arguments);
+
+                yjzanFrontend.config.elements.data[this.cid].on('change', this.onSettingsChange.bind(this));
+            },
+
+            initSettings: function initSettings() {
+                var globalModel = this.getGlobalModel(),
+                    settingsModel = globalModel.get('settings');
+
+                this.set('settings', settingsModel);
+
+                yjzanFrontend.config.elements.data[this.cid] = settingsModel;
+
+                yjzanFrontend.config.elements.editSettings[this.cid] = globalModel.get('editSettings');
+            },
+
+            initEditSettings: function initEditSettings() {},
+
+            getGlobalModel: function getGlobalModel() {
+                var templateID = this.get('templateID');
+
+                return yjzanPro.modules.globalWidget.getGlobalModels(templateID);
+            },
+
+            getTitle: function getTitle() {
+                var title = this.getSetting('_title');
+
+                if (!title) {
+                    title = this.getGlobalModel().get('title');
+                }
+
+                var global = yjzanPro.translate('global');
+
+                title = title.replace(new RegExp('\\(' + global + '\\)$'), '');
+
+                return title + ' (' + global + ')';
+            },
+
+            getIcon: function getIcon() {
+                return this.getGlobalModel().getIcon();
+            },
+
+            onSettingsChange: function onSettingsChange(model) {
+                if (!model.changed.elements) {
+                    this.set('previewSettings', model.toJSON({ removeDefault: true }), { silent: true });
+                }
+            },
+
+            onDestroy: function onDestroy() {
+                var panel = yjzan.getPanelView(),
+                    currentPageName = panel.getCurrentPageName();
+
+                if (-1 !== ['editor', 'globalWidget'].indexOf(currentPageName)) {
+                    panel.setPage('elements');
+                }
+            }
+        });
+
+        /***/ }),
+    /* 39 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzan.modules.layouts.panel.pages.elements.views.Elements.extend({
+            id: 'yjzan-global-templates',
+
+            getEmptyView: function getEmptyView() {
+                if (this.collection.length) {
+                    return null;
+                }
+
+                return __webpack_require__(40);
+            },
+
+            onFilterEmpty: function onFilterEmpty() {}
+        });
+
+        /***/ }),
+    /* 40 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var GlobalWidgetsView = yjzan.modules.layouts.panel.pages.elements.views.Global;
+
+        module.exports = GlobalWidgetsView.extend({
+            template: '#tmpl-yjzan-panel-global-widget-no-templates',
+
+            id: 'yjzan-panel-global-widget-no-templates',
+
+            className: 'yjzan-nerd-box yjzan-panel-nerd-box'
+        });
+
+        /***/ }),
+    /* 41 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = Marionette.ItemView.extend({
+            id: 'yjzan-panel-global-widget',
+
+            template: '#tmpl-yjzan-panel-global-widget',
+
+            ui: {
+                editButton: '#yjzan-global-widget-locked-edit .yjzan-button',
+                unlinkButton: '#yjzan-global-widget-locked-unlink .yjzan-button',
+                loading: '#yjzan-global-widget-loading'
+            },
+
+            events: {
+                'click @ui.editButton': 'onEditButtonClick',
+                'click @ui.unlinkButton': 'onUnlinkButtonClick'
+            },
+
+            initialize: function initialize() {
+                this.initUnlinkDialog();
+            },
+
+            buildUnlinkDialog: function buildUnlinkDialog() {
+                var self = this;
+
+                return yjzanCommon.dialogsManager.createWidget('confirm', {
+                    id: 'yjzan-global-widget-unlink-dialog',
+                    headerMessage: yjzanPro.translate('unlink_widget'),
+                    message: yjzanPro.translate('dialog_confirm_unlink'),
+                    position: {
+                        my: 'center center',
+                        at: 'center center'
+                    },
+                    strings: {
+                        confirm: yjzanPro.translate('unlink'),
+                        cancel: yjzanPro.translate('cancel')
+                    },
+                    onConfirm: function onConfirm() {
+                        self.getOption('editedView').unlink();
+                    }
+                });
+            },
+
+            initUnlinkDialog: function initUnlinkDialog() {
+                var dialog;
+
+                this.getUnlinkDialog = function () {
+                    if (!dialog) {
+                        dialog = this.buildUnlinkDialog();
+                    }
+
+                    return dialog;
+                };
+            },
+
+            editGlobalModel: function editGlobalModel() {
+                var editedView = this.getOption('editedView');
+
+                yjzan.getPanelView().openEditor(editedView.getEditModel(), editedView);
+            },
+
+            onEditButtonClick: function onEditButtonClick() {
+                var self = this,
+                    editedView = self.getOption('editedView'),
+                    editedModel = editedView.getEditModel();
+
+                if ('loaded' === editedModel.get('settingsLoadedStatus')) {
+                    self.editGlobalModel();
+
+                    return;
+                }
+
+                self.ui.loading.removeClass('yjzan-hidden');
+
+                yjzanPro.modules.globalWidget.requestGlobalModelSettings(editedModel, function () {
+                    self.ui.loading.addClass('yjzan-hidden');
+
+                    self.editGlobalModel();
+                });
+            },
+
+            onUnlinkButtonClick: function onUnlinkButtonClick() {
+                this.getUnlinkDialog().show();
+            }
+        });
+
+        /***/ }),
+    /* 42 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            onYjzanInit: function onYjzanInit() {
+                yjzan.channels.editor.on('section:activated', this.onSectionActivated);
+            },
+
+            onSectionActivated: function onSectionActivated(sectionName, editor) {
+                var editedElement = editor.getOption('editedElementView');
+
+                if ('flip-box' !== editedElement.model.get('widgetType')) {
+                    return;
+                }
+
+                var isSideBSection = -1 !== ['section_side_b_content', 'section_style_b'].indexOf(sectionName);
+
+                editedElement.$el.toggleClass('yjzan-flip-box--flipped', isSideBSection);
+
+                var $backLayer = editedElement.$el.find('.yjzan-flip-box__back');
+
+                if (isSideBSection) {
+                    $backLayer.css('transition', 'none');
+                }
+
+                if (!isSideBSection) {
+                    setTimeout(function () {
+                        $backLayer.css('transition', '');
+                    }, 10);
+                }
+            }
+        });
+
+        /***/ }),
+    /* 43 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            config: yjzanPro.config.shareButtonsNetworks,
+
+            networksClassDictionary: {
+                google: 'fa fa-google-plus',
+                pocket: 'fa fa-get-pocket',
+                email: 'fa fa-envelope'
+            },
+
+            getNetworkClass: function getNetworkClass(networkName) {
+                return this.networksClassDictionary[networkName] || 'fa fa-' + networkName;
+            },
+
+            getNetworkTitle: function getNetworkTitle(buttonSettings) {
+                return buttonSettings.text || this.config[buttonSettings.button].title;
+            },
+
+            hasCounter: function hasCounter(networkName, settings) {
+                return 'icon' !== settings.view && 'yes' === settings.show_counter && this.config[networkName].has_counter;
+            }
+        });
+
+        /***/ }),
+    /* 40 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            onYjzanInit: function onYjzanInit() {
+                var FontsManager = __webpack_require__(45);
+
+                this.assets = {
+                    font: new FontsManager()
+                };
+            }
+        });
+
+        /***/ }),
+    /* 45 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.Module.extend({
+
+            _enqueuedFonts: [],
+            _enqueuedTypekit: false,
+
+            onFontChange: function onFontChange(fontType, font) {
+                if ('custom' !== fontType && 'typekit' !== fontType) {
+                    return;
+                }
+
+                if (-1 !== this._enqueuedFonts.indexOf(font)) {
+                    return;
+                }
+
+                if ('typekit' === fontType && this._enqueuedTypekit) {
+                    return;
+                }
+
+                this.getCustomFont(fontType, font);
+            },
+
+            getCustomFont: function getCustomFont(fontType, font) {
+                yjzanPro.ajax.addRequest('assets_manager_panel_action_data', {
+                    data: {
+                        service: 'font',
+                        type: fontType,
+                        font: font
+                    },
+                    success: function success(data) {
+                        if (data.font_face) {
+                            yjzan.$previewContents.find('style:last').after('<style type="text/css">' + data.font_face + '</style>');
+                        }
+
+                        if (data.font_url) {
+                            yjzan.$previewContents.find('link:last').after('<link href="' + data.font_url + '" rel="stylesheet" type="text/css">');
+                        }
+                    }
+                });
+
+                this._enqueuedFonts.push(font);
+
+                if ('typekit' === fontType) {
+                    this._enqueuedTypekit = true;
+                }
+            },
+
+            onInit: function onInit() {
+                yjzan.channels.editor.on('font:insertion', this.onFontChange.bind(this));
+            }
+        });
+
+        /***/ }),
+    /* 46 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+            onYjzanPreviewLoaded: function onYjzanPreviewLoaded() {
+                var CommentsSkin = __webpack_require__(47);
+                this.commentsSkin = new CommentsSkin();
+            }
+        });
+
+        /***/ }),
+    /* 47 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = function () {
+            var self = this;
+
+            self.onPanelShow = function (panel, model) {
+                var settingsModel = model.get('settings');
+
+                // If no skins - set the skin to `theme_comments`.
+                if (!settingsModel.controls._skin.default) {
+                    settingsModel.set('_skin', 'theme_comments');
+                }
+            };
+
+            self.init = function () {
+                yjzan.hooks.addAction('panel/open_editor/widget/post-comments', self.onPanelShow);
+            };
+
+            self.init();
+        };
+
+        /***/ }),
+    /* 48 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var _layout = __webpack_require__(49);
+
+        var _layout2 = _interopRequireDefault(_layout);
+
+        var _view = __webpack_require__(51);
+
+        var _view2 = _interopRequireDefault(_view);
+
+        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+        module.exports = yjzanModules.editor.utils.Module.extend({
+
+            onYjzanInit: function onYjzanInit() {
+                if (!yjzanPro.config.theme_builder) {
+                    return;
+                }
+
+                yjzan.channels.editor.on('page_settings:preview_settings:activated', this.onSectionPreviewSettingsActive);
+
+                yjzan.addControlView('Conditions_repeater', __webpack_require__(53));
+
+                yjzan.hooks.addFilter('panel/footer/behaviors', this.addFooterBehavior);
+
+                yjzan.saver.on('save', this.onEditorSave);
+
+                this.initPublishLayout();
+            },
+
+            addFooterBehavior: function addFooterBehavior(behaviors) {
+                behaviors.saver = {
+                    behaviorClass: __webpack_require__(55)
+                };
+
+                return behaviors;
+            },
+
+            saveAndReload: function saveAndReload() {
+                yjzan.saver.saveAutoSave({
+                    onSuccess: function onSuccess() {
+                        yjzan.dynamicTags.cleanCache();
+                        yjzan.reloadPreview();
+                    }
+                });
+            },
+
+            onApplyPreview: function onApplyPreview() {
+                this.saveAndReload();
+            },
+
+            onSectionPreviewSettingsActive: function onSectionPreviewSettingsActive() {
+                this.updatePreviewIdOptions(true);
+            },
+
+            onPageSettingsChange: function onPageSettingsChange(model) {
+                if (model.changed.preview_type) {
+                    model.set({
+                        preview_id: '',
+                        preview_search_term: ''
+                    });
+
+                    if ('page_settings' === yjzan.getPanelView().getCurrentPageName()) {
+                        this.updatePreviewIdOptions(true);
+                    }
+                }
+
+                if (!_.isUndefined(model.changed.page_template)) {
+                    yjzan.saver.saveAutoSave({
+                        onSuccess: function onSuccess() {
+                            yjzan.reloadPreview();
+
+                            yjzan.once('preview:loaded', function () {
+                                yjzan.getPanelView().setPage('page_settings');
+                            });
+                        }
+                    });
+                }
+            },
+
+            updatePreviewIdOptions: function updatePreviewIdOptions(render) {
+                var previewType = yjzan.settings.page.model.get('preview_type');
+                if (!previewType) {
+                    return;
+                }
+                previewType = previewType.split('/');
+
+                var currentView = yjzan.getPanelView().getCurrentPageView(),
+                    controlModel = currentView.collection.findWhere({
+                        name: 'preview_id'
+                    });
+
+                if ('author' === previewType[1]) {
+                    controlModel.set({
+                        filter_type: 'author',
+                        object_type: 'author'
+                    });
+                } else if ('taxonomy' === previewType[0]) {
+                    controlModel.set({
+                        filter_type: 'taxonomy',
+                        object_type: previewType[1]
+                    });
+                } else if ('single' === previewType[0]) {
+                    controlModel.set({
+                        filter_type: 'post',
+                        object_type: previewType[1]
+                    });
+                } else {
+                    controlModel.set({
+                        filter_type: '',
+                        object_type: ''
+                    });
+                }
+
+                if (true === render) {
+                    // Can be model.
+                    var controlView = currentView.children.findByModel(controlModel);
+
+                    controlView.render();
+
+                    controlView.$el.toggle(!!controlModel.get('filter_type'));
+                }
+            },
+
+            onYjzanPreviewLoaded: function onYjzanPreviewLoaded() {
+                if (!yjzanPro.config.theme_builder) {
+                    return;
+                }
+
+                yjzan.getPanelView().on('set:page:page_settings', this.updatePreviewIdOptions);
+
+                yjzan.settings.page.model.on('change', this.onPageSettingsChange.bind(this));
+
+                yjzan.channels.editor.on('yjzanThemeBuilder:ApplyPreview', this.onApplyPreview.bind(this));
+
+                // Scroll to Editor. Timeout according to preview resize css animation duration.
+                setTimeout(function () {
+                    yjzan.$previewContents.find('html, body').animate({
+                        scrollTop: yjzan.$previewContents.find('#yjzan').offset().top - yjzan.$preview[0].contentWindow.innerHeight / 2
+                    });
+                }, 500);
+            },
+
+            showPublishModal: function showPublishModal() {
+                this.getPublishLayout().showModal();
+            },
+
+            initPublishLayout: function initPublishLayout() {
+                var _this = this;
+
+                var publishLayout = void 0;
+
+                this.getPublishLayout = function () {
+                    if (!publishLayout) {
+                        publishLayout = new _layout2.default();
+
+                        _this.trigger('publish-layout:init', publishLayout);
+                    }
+
+                    return publishLayout;
+                };
+
+                this.on('publish-layout:init', this.addConditionsScreen);
+            },
+
+            addConditionsScreen: function addConditionsScreen(publishLayout) {
+                var themeBuilderModuleConfig = yjzanPro.config.theme_builder,
+                    settings = themeBuilderModuleConfig.settings;
+
+                this.conditionsModel = new yjzanModules.editor.elements.models.BaseSettings(settings, {
+                    controls: themeBuilderModuleConfig.template_conditions.controls
+                });
+
+                publishLayout.addScreen({
+                    View: _view2.default,
+                    viewOptions: {
+                        model: this.conditionsModel,
+                        controls: this.conditionsModel.controls
+                    },
+                    name: 'conditions',
+                    title: yjzanPro.translate('conditions'),
+                    description: yjzanPro.translate('conditions_publish_screen_description'),
+                    image: yjzanPro.config.urls.modules + 'theme-builder/assets/images/conditions-tab.svg'
+                });
+            },
+
+            onEditorSave: function onEditorSave() {
+                var _this2 = this;
+
+                if (!this.conditionsModel) {
+                    return;
+                }
+
+                yjzanPro.ajax.addRequest('theme_builder_save_conditions', {
+                    data: this.conditionsModel.toJSON({ removeDefault: true }),
+                    success: function success() {
+                        yjzanPro.config.theme_builder.settings.conditions = _this2.conditionsModel.get('conditions');
+                    }
+                });
+            }
+        });
+
+        /***/ }),
+    /* 49 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        Object.defineProperty(exports, "__esModule", {
+            value: true
+        });
+
+        var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+        var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
+        var _content = __webpack_require__(50);
+
+        var _content2 = _interopRequireDefault(_content);
+
+        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+        function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+        function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+        function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+        var _class = function (_yjzanModules$com) {
+            _inherits(_class, _yjzanModules$com);
+
+            function _class() {
+                _classCallCheck(this, _class);
+
+                return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+            }
+
+            _createClass(_class, [{
+                key: 'initialize',
+                value: function initialize() {
+                    var _get2;
+
+                    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                        args[_key] = arguments[_key];
+                    }
+
+                    (_get2 = _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'initialize', this)).call.apply(_get2, [this].concat(args));
+
+                    this.screens = [];
+                }
+            }, {
+                key: 'getModalOptions',
+                value: function getModalOptions() {
+                    return {
+                        id: 'yjzan-publish__modal',
+                        hide: {
+                            onButtonClick: false
+                        }
+                    };
+                }
+            }, {
+                key: 'getLogoOptions',
+                value: function getLogoOptions() {
+                    return {
+                        title: yjzanPro.translate('publish_settings')
+                    };
+                }
+            }, {
+                key: 'initModal',
+                value: function initModal() {
+                    var _this2 = this;
+
+                    _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'initModal', this).call(this);
+
+                    this.modal.addButton({
+                        name: 'publish',
+                        text: yjzanPro.translate('save_and_close'),
+                        callback: function callback() {
+                            return _this2.onPublishButtonClick();
+                        }
+                    });
+
+                    this.modal.addButton({
+                        name: 'next',
+                        text: yjzanPro.translate('next'),
+                        callback: function callback() {
+                            return _this2.onNextButtonClick();
+                        }
+                    });
+
+                    var $publishButton = this.modal.getElements('publish');
+
+                    this.modal.getElements('next').addClass('yjzan-button-success').add($publishButton).addClass('yjzan-button').removeClass('dialog-button');
+                }
+            }, {
+                key: 'addScreen',
+                value: function addScreen(screenData, at) {
+                    var index = undefined !== at ? at : this.screens.length;
+
+                    this.screens.splice(index, 0, screenData);
+                }
+            }, {
+                key: 'showModal',
+                value: function showModal() {
+                    if (!this.layoutInitialized) {
+                        this.showLogo();
+
+                        this.showContentView();
+
+                        this.layoutInitialized = true;
+                    }
+
+                    _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'showModal', this).call(this);
+                }
+            }, {
+                key: 'showContentView',
+                value: function showContentView() {
+                    var _this3 = this;
+
+                    var contentView = new _content2.default({ screens: this.screens });
+
+                    contentView.on('screen:change', function (screen) {
+                        return _this3.onContentViewScreenChange(screen);
+                    });
+
+                    this.modalContent.show(contentView);
+                }
+            }, {
+                key: 'onNextButtonClick',
+                value: function onNextButtonClick() {
+                    var currentScreenIndex = this.screens.indexOf(this.modalContent.currentView.currentScreen);
+
+                    this.modalContent.currentView.showScreenByIndex(currentScreenIndex + 1);
+                }
+            }, {
+                key: 'onPublishButtonClick',
+                value: function onPublishButtonClick() {
+                    yjzan.saver.defaultSave();
+
+                    this.hideModal();
+                }
+            }, {
+                key: 'onContentViewScreenChange',
+                value: function onContentViewScreenChange(screen) {
+                    var isLastScreen = this.screens.indexOf(screen) === this.screens.length - 1;
+
+                    this.modal.getElements('next').toggle(!isLastScreen);
+
+                    this.modal.getElements('publish').toggleClass('yjzan-button-success', isLastScreen);
+                }
+            }]);
+
+            return _class;
+        }(yjzanModules.common.views.modal.Layout);
+
+        exports.default = _class;
+
+        /***/ }),
+    /* 50 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        Object.defineProperty(exports, "__esModule", {
+            value: true
+        });
+
+        var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+        function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+        function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+        function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+        var _class = function (_Marionette$LayoutVie) {
+            _inherits(_class, _Marionette$LayoutVie);
+
+            function _class() {
+                _classCallCheck(this, _class);
+
+                return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+            }
+
+            _createClass(_class, [{
+                key: 'id',
+                value: function id() {
+                    return 'yjzan-publish';
+                }
+            }, {
+                key: 'getTemplate',
+                value: function getTemplate() {
+                    return Marionette.TemplateCache.get('#tmpl-yjzan-publish');
+                }
+            }, {
+                key: 'ui',
+                value: function ui() {
+                    return {
+                        tabs: '.yjzan-publish__tab'
+                    };
+                }
+            }, {
+                key: 'events',
+                value: function events() {
+                    return {
+                        'click @ui.tabs': 'onTabClick'
+                    };
+                }
+            }, {
+                key: 'regions',
+                value: function regions() {
+                    return {
+                        screen: '#yjzan-publish__screen'
+                    };
+                }
+            }, {
+                key: 'templateHelpers',
+                value: function templateHelpers() {
+                    return {
+                        screens: this.screens
+                    };
+                }
+            }, {
+                key: 'initialize',
+                value: function initialize() {
+                    this.screens = this.getOption('screens');
+                }
+            }, {
+                key: 'showScreenByName',
+                value: function showScreenByName(screenName) {
+                    var screen = _.findWhere(this.screens, { name: screenName });
+
+                    this.showScreen(screen);
+                }
+            }, {
+                key: 'showScreenByIndex',
+                value: function showScreenByIndex(index) {
+                    this.showScreen(this.screens[index]);
+                }
+            }, {
+                key: 'showScreen',
+                value: function showScreen(screen) {
+                    this.screen.show(new screen.View(screen.viewOptions));
+
+                    if (this.ui.tabs.length) {
+                        if (this.$currentTab) {
+                            this.$currentTab.removeClass('yjzan-active');
+                        }
+
+                        this.$currentTab = this.ui.tabs.filter('[data-screen="' + screen.name + '"]');
+
+                        this.$currentTab.addClass('yjzan-active');
+                    }
+
+                    this.currentScreen = screen;
+
+                    this.trigger('screen:change', screen);
+                }
+            }, {
+                key: 'onRender',
+                value: function onRender() {
+                    this.showScreenByIndex(0);
+                }
+            }, {
+                key: 'onTabClick',
+                value: function onTabClick(event) {
+                    this.showScreenByName(event.currentTarget.dataset.screen);
+                }
+            }]);
+
+            return _class;
+        }(Marionette.LayoutView);
+
+        exports.default = _class;
+
+        /***/ }),
+    /* 51 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var inlineControlsStack = __webpack_require__(52);
+
+        module.exports = inlineControlsStack.extend({
+            id: 'yjzan-theme-builder-conditions-view',
+
+            template: '#tmpl-yjzan-theme-builder-conditions-view',
+
+            childViewContainer: '#yjzan-theme-builder-conditions-controls',
+
+            childViewOptions: function childViewOptions() {
+                return {
+                    elementSettingsModel: this.model
+                };
+            }
+        });
+
+        /***/ }),
+    /* 52 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzanModules.editor.views.ControlsStack.extend({
+            activeTab: 'content',
+
+            activeSection: 'settings',
+
+            initialize: function initialize() {
+                this.collection = new Backbone.Collection(_.values(this.options.controls));
+            },
+
+            filter: function filter(model) {
+                if ('section' === model.get('type')) {
+                    return true;
+                }
+
+                var section = model.get('section');
+
+                return !section || section === this.activeSection;
+            },
+
+            childViewOptions: function childViewOptions() {
+                return {
+                    elementSettingsModel: this.model
+                };
+            }
+        });
+
+        /***/ }),
+    /* 53 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var _repeaterRow = __webpack_require__(54);
+
+        var _repeaterRow2 = _interopRequireDefault(_repeaterRow);
+
+        function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+        module.exports = yjzan.modules.controls.Repeater.extend({
+
+            childView: _repeaterRow2.default,
+
+            updateActiveRow: function updateActiveRow() {},
+
+            initialize: function initialize() {
+                yjzan.modules.controls.Repeater.prototype.initialize.apply(this, arguments);
+
+                this.config = yjzanPro.config.theme_builder;
+
+                this.updateConditionsOptions(this.config.settings.template_type);
+            },
+
+            checkConflicts: function checkConflicts(model) {
+                var modelId = model.get('_id'),
+                    rowId = 'yjzan-condition-id-' + modelId,
+                    errorMessageId = 'yjzan-conditions-conflict-message-' + modelId,
+                    $error = jQuery('#' + errorMessageId);
+
+                // On render - the row isn't exist, so don't cache it.
+                jQuery('#' + rowId).removeClass('yjzan-error');
+
+                $error.remove();
+
+                yjzanPro.ajax.addRequest('theme_builder_conditions_check_conflicts', {
+                    unique_id: rowId,
+                    data: {
+                        condition: model.toJSON({ removeDefaults: true })
+                    },
+                    success: function success(data) {
+                        if (!_.isEmpty(data)) {
+                            jQuery('#' + rowId).addClass('yjzan-error').after('<div id="' + errorMessageId + '" class="yjzan-conditions-conflict-message">' + data + '</div>');
                         }
                     }
                 });
             },
 
-            bindEvents: function bindEvents() {
-                yjzanFrontend.elements.$document.on('click', this.getSettings('selectors.links'), this.openLink);
+            updateConditionsOptions: function updateConditionsOptions(templateType) {
+                var self = this,
+                    conditionType = self.config.types[templateType].condition_type,
+                    options = {};
+
+                _([conditionType]).each(function (conditionId, conditionIndex) {
+                    var conditionConfig = self.config.conditions[conditionId],
+                        group = {
+                            label: conditionConfig.label,
+                            options: {}
+                        };
+
+                    group.options[conditionId] = conditionConfig.all_label;
+
+                    _(conditionConfig.sub_conditions).each(function (subConditionId) {
+                        group.options[subConditionId] = self.config.conditions[subConditionId].label;
+                    });
+
+                    options[conditionIndex] = group;
+                });
+
+                var fields = this.model.get('fields');
+
+                fields[1].default = conditionType;
+
+                if ('general' === conditionType) {
+                    fields[1].groups = options;
+                } else {
+                    fields[2].groups = options;
+                }
             },
 
-            onSlideChange: function onSlideChange() {
-                this.getSlide('prev').add(this.getSlide('next')).add(this.getSlide('active')).find('.' + this.getSettings('classes.videoWrapper')).remove();
+            onRender: function onRender() {
+                this.ui.btnAddRow.text(yjzanPro.translate('add_condition'));
 
-                this.playSlideVideo();
+                var self = this;
+
+                this.collection.each(function (model) {
+                    self.checkConflicts(model);
+                });
+            },
+
+            // Overwrite thr original + checkConflicts.
+            onRowControlChange: function onRowControlChange(model) {
+                this.checkConflicts(model);
+            }
+        });
+
+        /***/ }),
+    /* 46 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        module.exports = yjzan.modules.controls.RepeaterRow.extend({
+
+            template: '#tmpl-yjzan-theme-builder-conditions-repeater-row',
+
+            childViewContainer: '.yjzan-theme-builder-conditions-repeater-row-controls',
+
+            id: function id() {
+                return 'yjzan-condition-id-' + this.model.get('_id');
+            },
+
+            onBeforeRender: function onBeforeRender() {
+                var subNameModel = this.collection.findWhere({
+                        name: 'sub_name'
+                    }),
+                    subIdModel = this.collection.findWhere({
+                        name: 'sub_id'
+                    }),
+                    subConditionConfig = this.config.conditions[this.model.attributes.sub_name];
+
+                subNameModel.attributes.groups = this.getOptions();
+
+                if (subConditionConfig && subConditionConfig.controls) {
+                    _(subConditionConfig.controls).each(function (control) {
+                        subIdModel.set(control);
+                        subIdModel.set('name', 'sub_id');
+                    });
+                }
+            },
+
+            initialize: function initialize() {
+                yjzan.modules.controls.RepeaterRow.prototype.initialize.apply(this, arguments);
+
+                this.config = yjzanPro.config.theme_builder;
+            },
+
+            updateOptions: function updateOptions() {
+                if (this.model.changed.name) {
+                    this.model.set({
+                        sub_name: '',
+                        sub_id: ''
+                    });
+                }
+
+                if (this.model.changed.name || this.model.changed.sub_name) {
+                    this.model.set('sub_id', '');
+
+                    var subIdModel = this.collection.findWhere({
+                        name: 'sub_id'
+                    });
+
+                    subIdModel.set({
+                        type: 'select',
+                        options: {
+                            '': 'All'
+                        }
+                    });
+
+                    this.render();
+                }
+
+                if (this.model.changed.type) {
+                    this.setTypeAttribute();
+                }
+            },
+
+            getOptions: function getOptions() {
+                var self = this,
+                    conditionConfig = self.config.conditions[this.model.get('name')];
+
+                if (!conditionConfig) {
+                    return;
+                }
+
+                var options = {
+                    '': conditionConfig.all_label
+                };
+
+                _(conditionConfig.sub_conditions).each(function (conditionId, conditionIndex) {
+                    var subConditionConfig = self.config.conditions[conditionId],
+                        group;
+
+                    if (!subConditionConfig) {
+                        return;
+                    }
+
+                    if (subConditionConfig.sub_conditions.length) {
+                        group = {
+                            label: subConditionConfig.label,
+                            options: {}
+                        };
+                        group.options[conditionId] = subConditionConfig.all_label;
+
+                        _(subConditionConfig.sub_conditions).each(function (subConditionId) {
+                            group.options[subConditionId] = self.config.conditions[subConditionId].label;
+                        });
+
+                        // Use a sting key - to keep order
+                        options['key' + conditionIndex] = group;
+                    } else {
+                        options[conditionId] = subConditionConfig.label;
+                    }
+                });
+
+                return options;
+            },
+
+            setTypeAttribute: function setTypeAttribute() {
+                var typeView = this.children.findByModel(this.collection.findWhere({ name: 'type' }));
+
+                typeView.$el.attr('data-yjzan-condition-type', typeView.getControlValue());
+            },
+
+            onRender: function onRender() {
+                var nameModel = this.collection.findWhere({
+                        name: 'name'
+                    }),
+                    subNameModel = this.collection.findWhere({
+                        name: 'sub_name'
+                    }),
+                    subIdModel = this.collection.findWhere({
+                        name: 'sub_id'
+                    }),
+                    nameView = this.children.findByModel(nameModel),
+                    subNameView = this.children.findByModel(subNameModel),
+                    subIdView = this.children.findByModel(subIdModel),
+                    conditionConfig = this.config.conditions[this.model.attributes.name],
+                    subConditionConfig = this.config.conditions[this.model.attributes.sub_name],
+                    typeConfig = this.config.types[this.config.settings.template_type];
+
+                if (typeConfig.condition_type === nameView.getControlValue() && 'general' !== nameView.getControlValue() && !_.isEmpty(conditionConfig.sub_conditions)) {
+                    nameView.$el.hide();
+                }
+
+                if (!conditionConfig || _.isEmpty(conditionConfig.sub_conditions) && _.isEmpty(conditionConfig.controls) || !nameView.getControlValue() || 'general' === nameView.getControlValue()) {
+                    subNameView.$el.hide();
+                }
+
+                if (!subConditionConfig || _.isEmpty(subConditionConfig.controls) || !subNameView.getControlValue()) {
+                    subIdView.$el.hide();
+                }
+
+                // Avoid set a `single` for a-l-l singular types. (conflicted with 404 & custom cpt like Shops and Events plugins).
+                if ('singular' === typeConfig.condition_type) {
+                    if ('' === subNameView.getControlValue()) {
+                        subNameView.setValue('post');
+                    }
+                }
+
+                this.setTypeAttribute();
+            },
+
+            onModelChange: function onModelChange() {
+                yjzan.modules.controls.RepeaterRow.prototype.onModelChange.apply(this, arguments);
+
+                this.updateOptions();
+            }
+        });
+
+        /***/ }),
+    /* 47 */
+    /***/ (function(module, exports, __webpack_require__) {
+
+        "use strict";
+
+
+        var SaverBehavior = yjzan.modules.components.saver.behaviors.FooterSaver;
+
+        module.exports = SaverBehavior.extend({
+            ui: function ui() {
+                var ui = SaverBehavior.prototype.ui.apply(this, arguments);
+
+                ui.menuConditions = '#yjzan-panel-footer-sub-menu-item-conditions';
+                ui.buttonPreviewSettings = '#yjzan-panel-footer-theme-builder-button-preview-settings';
+                ui.buttonOpenPreview = '#yjzan-panel-footer-theme-builder-button-open-preview';
+
+                return ui;
+            },
+
+            events: function events() {
+                var events = SaverBehavior.prototype.events.apply(this, arguments);
+
+                delete events['click @ui.buttonPreview'];
+
+                events['click @ui.buttonPreviewSettings'] = 'onClickButtonPreviewSettings';
+                events['click @ui.buttonOpenPreview'] = 'onClickButtonPreview';
+
+                return events;
+            },
+
+            initialize: function initialize() {
+                SaverBehavior.prototype.initialize.apply(this, arguments);
+
+                yjzan.settings.page.model.on('change', this.onChangeLocation.bind(this));
+            },
+
+            toggleMenuConditions: function toggleMenuConditions() {
+                this.ui.menuConditions.toggle(!!yjzanPro.config.theme_builder.settings.location && yjzan.config.user.is_yjz_admin);
+            },
+
+            onRender: function onRender() {
+                SaverBehavior.prototype.onRender.apply(this, arguments);
+
+                this.ui.menuConditions = this.view.addSubMenuItem('saver-options', {
+                    before: 'save-template',
+                    name: 'conditions',
+                    icon: 'fa fa-sliders',
+                    title: yjzanPro.translate('display_conditions'),
+                    callback: function callback() {
+                        return yjzanPro.modules.themeBuilder.showPublishModal();
+                    }
+                });
+
+                this.toggleMenuConditions();
+
+                this.ui.buttonPreview.tipsy('disable').html(jQuery('#tmpl-yjzan-theme-builder-button-preview').html()).addClass('yjzan-panel-footer-theme-builder-buttons-wrapper yjzan-toggle-state');
+            },
+
+            onChangeLocation: function onChangeLocation(settings) {
+                if (!_.isUndefined(settings.changed.location)) {
+                    yjzanPro.config.theme_builder.settings.location = settings.changed.location;
+                    this.toggleMenuConditions();
+                }
+            },
+
+            onClickButtonPublish: function onClickButtonPublish() {
+                var hasConditions = yjzanPro.config.theme_builder.settings.conditions.length,
+                    hasLocation = yjzanPro.config.theme_builder.settings.location,
+                    isDraft = 'draft' === yjzan.settings.page.model.get('post_status');
+
+                if (hasConditions && !isDraft || !hasLocation) {
+                    SaverBehavior.prototype.onClickButtonPublish.apply(this, arguments);
+                } else {
+                    yjzanPro.modules.themeBuilder.showPublishModal();
+                }
+            },
+
+            onClickButtonPreviewSettings: function onClickButtonPreviewSettings() {
+                var panel = yjzan.getPanelView();
+                panel.setPage('page_settings');
+                panel.getCurrentPageView().activateSection('preview_settings');
+                panel.getCurrentPageView()._renderChildren();
             }
         });
 
         /***/ })
-
-    /******/ });
-//# sourceMappingURL=frontend.js.map
+    /******/ ]);

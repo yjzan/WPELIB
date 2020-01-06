@@ -250,8 +250,8 @@
     #yjzan-theme-builder-conditions .yjzan-control-type-query {
       width: 100px; }
     #yjzan-theme-builder-conditions .yjzan-control-type-select .yjzan-control-input-wrapper:after {
-      font-family: eicons;
-      content: '\e955';
+      font-family: FontAwesome;
+      content: '\f0d7';
       position: absolute;
       top: 50%;
       -webkit-transform: translateY(-50%);
