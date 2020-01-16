@@ -1094,6 +1094,7 @@ body.yjzan-controls-ready .yjzan-panel #yjzan-panel-elements-loading {
     vertical-align: middle;
     height: 25px;
     letter-spacing: 2px;
+    padding-top: 8px;
 }
 
 .yjzan-panel #yjzan-panel-elements-search-wrapper {
