@@ -1487,7 +1487,7 @@ ul.yjzan-icon-list-items.yjzan-inline-items .yjzan-inline-item {
     border-radius: 3px; }
 .yjzan-button.yjzan-size-md {
     font-size: 14px;
-    padding: 15px 15px;
+    padding: 10px 15px;
     -webkit-border-radius: 4px;
     border-radius: 4px;
 }
@@ -1620,9 +1620,6 @@ ul.yjzan-icon-list-items.yjzan-inline-items .yjzan-inline-item {
     padding: 0;
     margin: 0;
     line-height: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
 }
 .yjzan-widget-heading .yjzan-heading-title > a {
     color: inherit;
@@ -3766,15 +3763,15 @@ div.swatchinput{display:inline-block;padding-right:7px;padding-bottom:3px}
 .swatchinput .belowtext {text-align: center;padding-top: 10px;}
 
 
-span.belowtext{display:table-cell;vertical-align:bottom;font-family:sans-serif;width:auto;left:50%;font-size:12px!important}
+span.belowtext{display:table-cell;vertical-align:bottom;font-family:sans-serif;width:auto;left:50%;font-size:11px!important;color: #888}
 label.selectedswatch{opacity:.9}
-label.selectedswatch.wcvasquare{cursor:pointer;background-size:cover;background-repeat:no-repeat;display:inline-block;-webkit-transition:all .1s ease-in;-moz-transition:all .1s ease-in;transition:all .1s ease-in;border:solid 2px #fff!important;outline:solid 2px #e33112!important;line-height:1}
+label.selectedswatch.wcvasquare{cursor:pointer;background-size:cover;background-repeat:no-repeat;display:inline-block;-webkit-transition:all .1s ease-in;-moz-transition:all .1s ease-in;transition:all .1s ease-in;outline:solid 2px #e33112!important;line-height:1}
 label.selectedswatch.wcvaround{cursor:pointer;background-size:cover;background-repeat:no-repeat;display:inline-block;-webkit-transition:all .1s ease-in;-moz-transition:all .1s ease-in;transition:all .1s ease-in;border:solid 2px #ee590d!important;line-height:1}
 label.wcvaswatchlabel{cursor:pointer;background-size:cover;background-repeat:no-repeat;display:inline-block;-webkit-transition:all .1s ease-in;-moz-transition:all .1s ease-in;transition:all .1s ease-in;border: solid 1px rgba(187, 187, 187, 0.73)!important;line-height:1}
 label.wcva_single_textblock{text-align:center;width:auto;padding:0 10px;line-height:30px;color:#000;border:solid 0 #fff!important;outline:solid 0 #9c9999!important;background:#eee;font-size:14px;font-weight:500!important;}
 label.selectedswatch.wcva_single_textblock{background:#e88b19;color:#fff!important;line-height:30px;padding:0 10px;font-size:14px;font-weight:500!important;}
 label.wcvaround{border-radius:50%;-webkit-border-radius:50%;-moz-border-radius:50%;outline:solid 0 #9c9999!important}
-.swatchtitlelabel{font-weight:700}
+.swatchtitlelabel{font-weight:400; font-size: 12px;}
 label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 
 #powerTip{cursor:default;background-color:#333;background-color:rgba(0,0,0,.8);border-radius:4px;color:#fff;display:none;padding:7px;position:absolute;white-space:nowrap;z-index:2147483647}
@@ -3795,7 +3792,7 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 #powerTip.se-alt:before{left:auto;right:10px}
 .yjzan-add-to-cart table.variations td.label{width:auto;min-width: 70px;!important;}
 .yjzan-add-to-cart table.variations td.value {width:auto;!important;}
-.single_cart_button ,.single_add_to_cart_button{padding-right:15px!important;padding-left:15px!important;min-width: 100px; flex-grow:1;max-width: 250px;}
+.single_cart_button ,.single_add_to_cart_button{padding-right:15px!important;padding-left:15px!important;min-width: 100px; flex-grow:1;max-width: 250px;height: 40px;}
 .single_cart_button a { color: #fff;}
 .single_cart_button{ margin-left: 10px;}
 
@@ -3912,45 +3909,6 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
     font-size: 14px;
 }
 
-.yjz-yd-footer{
-    background: #fff;
-    width: 100%;
-    /*position: fixed;*/
-    /*top: 0px;*/
-    /*left: 0;*/
-    padding: 10px 20px;
-    display:-webkit-flex;
-    display:flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: space-around;
-    align-items: baseline;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    box-shadow: 0px 0px 4px #66666685;
-    z-index: 99;
-}
-
-.yjz-yd-footer .yjz-yd-footer-item{
-    flex-grow: 1;
-    text-align: center;
-}
-
-.yjz-yd-footer .yjz-yd-footer-item .item-title
-{
-    display: block;
-    font-size: 10px;
-    color: #666;
-    letter-spacing: 3px;
-    padding-top: 1px;
-}
-.yjz-yd-footer .yjz-yd-footer-item .item-icon
-{
-    display: block;
-    font-size: 16px;
-    color: #888;
-}
 
 .woocommerce-variation-price .price span {
     color: red;
@@ -4005,6 +3963,13 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 
 @media (min-width: 767px) {
     .woocommerce-cart .woocommerce-cart-form .actions .cart-empty-btn{float:right;line-height:40px;margin-right:40px}
+    .woocommerce-variation-add-to-cart.variations_button,
+    .yjzan-add-to-cart.yjzan-product-simple{
+        margin-top: 10px;
+    }
+    .variations_form.cart .var-cart-close-btn{
+        display: none;
+    }
 }
 
 @media (max-width: 767px) {
@@ -4013,15 +3978,51 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
     .single_cart_button, .single_add_to_cart_button{max-width: 100%;}
     .woocommerce-variation-add-to-cart.variations_button,
     .yjzan-add-to-cart.yjzan-product-simple{
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
         width: 100%;
         background: #fff;
-        z-index: 2;
-        padding: 8px 8px;
-        border-top: 1px solid #bbb;
+        padding: 8px 0px;
     }
+    .yjzan-widget.yjzan-widget-woocommerce-product-add-to-cart{
+        margin-bottom:3px;
+    }
+    .yjzan-add-to-cart.yjzan-product-variable  , .yjzan-add-to-cart.yjzan-product-simple {
+        position: fixed;
+        background:#fff;
+        left: 0;
+        bottom: 0;
+        z-index: 99;
+        width: 100%;
+        padding: 0px 10px 5px 10px;
+        border-top: 1px solid #bbb;
+
+    }
+    .yjzan-add-to-cart.yjzan-product-variable table.variations
+    {
+        display: none;
+    }
+
+    .single_variation_hide{
+        display: none!important;
+    }
+
+    .yjzan-add-to-cart.yjzan-product-variable .variations_form.cart
+    {
+        position: relative;
+    }
+
+    .variations_form.cart .var-cart-close-btn {
+        font-size: 19px !important;
+        transform: rotate(45deg);
+        cursor: pointer;
+        font-weight: bolder;
+        color:#888;
+        position: absolute;
+        top: -60px;
+        right: 6px;
+        display: none;
+    }
+
+
 }
 
 @media (max-width: 1024px) {
@@ -4260,9 +4261,25 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
         top: 0px;
         border-radius: 10px!important;
     }
+    .cart-thumb-img{display: none}
 }
 
 @media (max-width: 767px) {
+    .cart-thumb-img{
+        width: 70px;
+        height: 70px;
+        position: absolute;
+        top: -100px;
+        left: 10px;
+        -o-object-fit: cover;
+        object-fit: cover;
+        background:#eee;
+        box-shadow: 0px 0px 3px 1px
+        rgba(0, 0, 0, 0.64) !important;
+        border-radius: 8px !important;
+        background-size: cover;
+        display: none;
+    }
     .yjz_cart_layer .cart_p_header{
         grid-template-columns: 85px 1fr!important;
     }
@@ -4285,6 +4302,14 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
         white-space: nowrap;
     }
 
+    .variations_form.cart table.variations{
+        margin-top: 65px;
+    }
+
+}
+
+.variations_form.cart table.variations{
+    margin-bottom: 40px;
 }
 
 .yjz_cart_layer .cart_p_header .cart_p_img img {
@@ -4496,7 +4521,7 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
 .yjzan-slick-icon-type-6 .slick-next::before{  content: '\e660'!important;font-family: 'FontAwesome','iconfont';}
 .yjzan-slick-icon-type-6 .slick-prev  {transform: rotate(180deg);}
 
-.yjzan-yd-icon-nav .swiper-pagination-bullets{bottom: -5px}
+.yjzan-yd-icon-nav .swiper-pagination-bullets{bottom: -3px}
 .yjzan-yd-icon-nav .swiper-pagination-bullets span.linedot {
     width: 20px !important;
     height: 3px !important;
