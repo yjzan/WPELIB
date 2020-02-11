@@ -2864,7 +2864,7 @@ body.rtl.woocommerce #content div.product .yjzan-widget-woocommerce-product-imag
 
 .woocommerce div.product.yjzan form.cart table.variations td.value select {
     position: absolute;
-    background: 0 0;
+    /*background: 0 0;*/
     top: 0;
     width: 100%;
     max-width: 265px;
