@@ -4056,6 +4056,11 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
 
 }
 
+.yjz-product-left-box .swiper-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
 
 div.woocommerce-cart-form__cart-item .attachment-thumbnail.size-thumbnail {
     height: 70px;
@@ -4635,7 +4640,6 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
     width: 100px;
     background: rgba(242, 242, 242, 0.94);
     margin-right: 10px;
-    border-left: 5px solid rgba(242, 242, 242, 0.94);
     padding-top: 18px;
     padding-bottom: 18px;
     min-height: 400px;

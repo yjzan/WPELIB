@@ -892,6 +892,7 @@ select {
     background: #eca42833;
     padding: 8px;
     border-radius: 3px;
+    display: block;
 }
 
 .yjzan-panel .yjzan-descriptor a, .yjzan-panel .yjzan-control-field-description a{
