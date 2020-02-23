@@ -2648,3 +2648,14 @@ html.yjzan-html {
 {
   padding-top: 0px;
 }
+
+.eicon-close::before {
+  font-family: FontAwesome !important;
+  content: "\f00d";
+  font-style: normal;
+}
+.eicon-sync::before {
+  font-family: FontAwesome !important;
+  content: "\f021";
+  font-style: normal;
+}
