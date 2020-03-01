@@ -93,3 +93,4 @@
 .yjzan-finder__results__item__action{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;-ms-flex-pack:center;justify-content:center;height:100%;width:55px}
 .swal2-popup .swal2-actions{margin:0!important}
 .swal2-popup .swal2-styled.swal2-confirm{background-color:#d63030}
+.eicon-close::before {font-family: FontAwesome !important;content: "\f00d";font-style: normal;}

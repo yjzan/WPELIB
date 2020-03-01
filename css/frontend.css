@@ -4105,7 +4105,9 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
     color: #ed6031;
 }
 
-.productlist-skin-icon .add_to_cart_button{
+.productlist-skin-icon .add_to_cart_button,
+.productlist-skin-icon .product_type_variable
+{
     line-height: 0px;
     padding: 0 !important;
     background: rgba(0, 0, 0, 0)!important;

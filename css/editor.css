@@ -1002,7 +1002,7 @@ select {
 
 body:not(.yjzan-controls-ready) .yjzan-panel #yjzan-panel-page-elements {
     height: 100%;
-    overflow: hidden; }
+}
 
 .yjzan-panel #yjzan-panel-elements-navigation .yjzan-panel-navigation-tab {
     text-align: center;

@@ -1910,7 +1910,8 @@
     -webkit-box-direction: normal;
     -webkit-flex-direction: row;
     -ms-flex-direction: row;
-    flex-direction: row
+    flex-direction: row;
+    display: flex;
 }
 
 .yjzan-widget-countdown .yjzan-countdown-item {
