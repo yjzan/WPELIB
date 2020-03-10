@@ -2594,7 +2594,7 @@
                 var imgurl = yjzan.settings.page.model.get('yjz_site_logo').url;
                 if(imgurl!=='')
                 {
-                    imgurl = imgurl+'/150';
+                    imgurl = imgurl+'/300';
                     $("#yjzan-preview-iframe").contents().find(".yjz-website-logo").attr('src',imgurl);
                 }
 

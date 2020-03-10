@@ -3397,7 +3397,7 @@ body.rtl.woocommerce #content div.product .yjzan-widget-woocommerce-product-imag
     width: 100%
 }
 
-.yjzan-products-grid:not(.show-heading-yes) .products>h2 {
+.yjzan-products-grid:not(.show-heading-yes) .products>h4 {
     display: none
 }
 
@@ -3807,7 +3807,7 @@ body.rtl.woocommerce #content div.product .yjzan-widget-woocommerce-product-imag
     background-color: inherit
 }
 
-.yjzan-widget-woocommerce-product-additional-information:not(.yjzan-show-heading-yes) h2 {
+.yjzan-widget-woocommerce-product-additional-information:not(.yjzan-show-heading-yes) h4 {
     display: none
 }
 
@@ -4200,7 +4200,7 @@ body.rtl.woocommerce #content div.product .yjzan-widget-woocommerce-product-imag
 }
 
 .yjzan-widget-reviews .swiper-slide {
-    background-color: #fff;
+    background-color: #436fbf;
     border: 1px solid #e1e8ed;
     border-radius: 5px;
     padding: 0

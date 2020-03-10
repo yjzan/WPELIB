@@ -2584,7 +2584,7 @@ body.rtl.woocommerce-page div.product .yjzan-widget-woocommerce-product-images d
       display: block;
       position: relative; width: 100%;}
 
-.yjzan-products-grid:not(.show-heading-yes) .products > h2 {
+.yjzan-products-grid:not(.show-heading-yes) .products > h4 {
   display: none; }
 
 .yjzan-products-grid nav.woocommerce-pagination {
@@ -2901,7 +2901,7 @@ body.rtl.woocommerce-page div.product .yjzan-widget-woocommerce-product-images d
 .product .count {
   background-color: inherit; }
 
-.yjzan-widget-woocommerce-product-additional-information:not(.yjzan-show-heading-yes) h2 {
+.yjzan-widget-woocommerce-product-additional-information:not(.yjzan-show-heading-yes) h4 {
   display: none; }
 
 .woocommerce div.product.yjzan form.cart div.product-addon {
