@@ -3382,8 +3382,8 @@ body.rtl.woocommerce #content div.product .yjzan-widget-woocommerce-product-imag
 .yjzan-element.yjzan-products-grid ul.products li.product {
     width: auto;
     padding: 0;
-    margin: 0;
-    float: none
+    float: none;
+    margin:4px;
 }
 
 .yjzan-element.yjzan-products-grid ul.products li.product .onsale {
