@@ -4651,11 +4651,9 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
 
 .yjz-product-tabs-box .yjz-product-left-wrap{
     background: rgba(242, 242, 242, 0.94);
-    margin-right: 10px;
 }
 .yjz-product-tabs-box .yjz-product-left-box {
     width: 100%;
-    background: rgba(242, 242, 242, 0.94);
     padding-top: 18px;
     padding-bottom: 18px;
 
@@ -4663,6 +4661,7 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
 .yjz-product-tabs-box .yjz-product-swp-container {
     width: 100%;
     background: #ffffff;
+    padding: 0px 5px;
 }
 
 .yjz-product-tabs-box  .yjz-product-left-box .p-child-tag {
