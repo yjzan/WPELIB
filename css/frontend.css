@@ -609,19 +609,19 @@ img[src=""],img:not([src]){opacity:0;}
     display: -ms-flexbox;
     display: flex; }
 
-.yjzan-column-gap-narrow > .yjzan-row > .yjzan-column > .yjzan-element-populated {
+.yjzan-column-gap-narrow > .yjzan-row > .yjzan-column > .yjzan-column-wrap {
     padding: 5px; }
 
-.yjzan-column-gap-default > .yjzan-row > .yjzan-column > .yjzan-element-populated {
+.yjzan-column-gap-default > .yjzan-row > .yjzan-column > .yjzan-column-wrap {
     padding: 10px; }
 
-.yjzan-column-gap-extended > .yjzan-row > .yjzan-column > .yjzan-element-populated {
+.yjzan-column-gap-extended > .yjzan-row > .yjzan-column > .yjzan-column-wrap {
     padding: 15px; }
 
-.yjzan-column-gap-wide > .yjzan-row > .yjzan-column > .yjzan-element-populated {
+.yjzan-column-gap-wide > .yjzan-row > .yjzan-column > .yjzan-column-wrap {
     padding: 20px; }
 
-.yjzan-column-gap-wider > .yjzan-row > .yjzan-column > .yjzan-element-populated {
+.yjzan-column-gap-wider > .yjzan-row > .yjzan-column > .yjzan-column-wrap {
     padding: 30px; }
 
 .yjzan-inner-section .yjzan-column-gap-no .yjzan-element-populated {
@@ -4056,9 +4056,11 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
     .yjz-product-swp-container .swiper-wrapper{
         height: auto;
         z-index: 0;
+        overflow-scrolling: touch;
+        -webkit-overflow-scrolling: touch;
     }
     .yjz-product-tabs-box  .yjz-product-left-box .p-child-tag{padding: 6px 5px!important;}
-    .yjz-product-tabs-box .yjz-product-left-box{ width: 100%;margin-right: 8px;!important;}
+    .yjz-product-tabs-box .yjz-product-left-box{ width: 100%;margin-left: 5px!important;}
     .yjz-product-tabs-box .yjz-product-left-wrap
     {
         width: 80px;
@@ -4469,11 +4471,12 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
 {
     background: #eee;
     color: #333;
-    padding: 4px 12px;
+    padding: 7px 15px;
     font-size: 12px;
     border-radius: 2px;
     cursor: pointer;
     margin-right: 10px;
+    margin-bottom: 12px;
 }
 .yjz_cart_layer .cart_p_qty{
     display: flex;

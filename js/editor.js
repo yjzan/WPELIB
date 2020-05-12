@@ -5811,7 +5811,8 @@
                             return !jQuery('.dialog-widget:visible').length;
                         },
                         handle: function handle() {
-                            yjzan.getPanelView().setPage('menu');
+                            yjzan.getPanelView().setPage('elements');
+                           // yjzan.getPanelView().setPage('elements');
                         }
                     }
                 };
@@ -14688,7 +14689,17 @@
                             return response();
                         }
 
+                        if(request.term.length>1)
+                        {
+                           // request.term = request.term.replace(/ /g,"");
+                            request.term =  request.term.trim();
+                            if(request.term.length=='')
+                                request.term = ' ';
+                        }
+
+
                         var key_word =request.term.indexOf(' ')==0?'all-page':request.term.substr(1,request.term.length);
+                        var key_word =request.term.indexOf('@分类')==0?'yjz-category':request.term.substr(1,request.term.length);
 
                         for (var property in cache_array) {
                             if(property == key_word)
@@ -14700,7 +14711,7 @@
 
                         // Show Spinner.
                         self.ui.input.prev().show();
-                        if(request.term.indexOf(' ')==0 || ((request.term.indexOf(':')==0||request.term.indexOf('+')==0||request.term.indexOf('：')==0)&&request.term.length>=2))
+                        if(request.term.indexOf(' ')==0 || ((request.term.indexOf('@')==0||request.term.indexOf('+')==0)&&request.term.length>=2))
                         {
                             jQuery.post(window.ajaxurl, {
                                 editor: 'yjzan',
