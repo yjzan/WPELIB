@@ -4146,6 +4146,7 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
     display: flex;
     right: 5px;
     bottom: 22px;
+    z-index: 3;
 }
 
 .yjz-products-listtabs .yjz-add-to-carp-wrap .button ,
