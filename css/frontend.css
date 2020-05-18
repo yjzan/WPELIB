@@ -3619,6 +3619,7 @@ button.swiper-pagination-bullet {
     width: 100%;
     height: 250px;
     object-fit: cover;
+    display: inline!important;
 }
 
 .yjz-header {
@@ -3659,7 +3660,7 @@ button.swiper-pagination-bullet {
 
 .woocommerce-product-gallery__image img {
     max-height: 600px;
-    width: 98%;
+    width: 100%;
     object-fit: cover;
     border: 1px solid #ccc;
 }
@@ -3667,16 +3668,16 @@ button.swiper-pagination-bullet {
 
 .woocommerce-product-gallery .flex-control-thumbs img
 {
-    width: 90px;
-    height: 90px;
+    width: 60px;
+    height: 60px;
     border: 1px solid #bbb;
     object-fit:cover;
 }
 @media (max-width: 1025px) {
     .woocommerce-product-gallery .flex-control-thumbs img
     {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         border: 1px solid #bbb;
         object-fit:cover;
     }
@@ -3693,8 +3694,8 @@ button.swiper-pagination-bullet {
 @media (max-width: 767px) {
     .woocommerce-product-gallery .flex-control-thumbs img
     {
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
         border: 1px solid #bbb;
         object-fit:cover;
     }
@@ -3990,7 +3991,7 @@ label.wcvadisabled{pointer-events:none;cursor:not-allowed;opacity:.4}
         background:#fff;
         left: 0;
         bottom: 0;
-        z-index: 2;
+        z-index: 100;
         width: 100%;
         padding: 8px 10px 5px 10px;
         border-top: 1px solid #bbb;
@@ -4580,6 +4581,7 @@ tr.woocommerce-cart-form__cart-item  .attachment-thumbnail.size-thumbnail
 .yjz-product-swp-container .swiper-slide
 {
     height: auto!important;
+    min-height: 400px;
 }
 
 .yjz-product-head-tip
